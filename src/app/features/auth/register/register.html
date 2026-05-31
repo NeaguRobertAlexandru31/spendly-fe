@@ -1,1 +1,161 @@
-<p>register works!</p>
+<div class="auth-grid">
+  <!-- Aside sinistra -->
+  <div class="auth-aside flex-col justify-between overflow-hidden relative p-12"
+       style="background: linear-gradient(160deg, #2a1d63 0%, #4f34bd 55%, #6B4FD8 100%);">
+    <div class="absolute rounded-full pointer-events-none"
+         style="width:360px;height:360px;top:-120px;right:-100px;background:radial-gradient(circle,rgba(255,255,255,.18),transparent 70%)"></div>
+    <div class="absolute rounded-full pointer-events-none"
+         style="width:300px;height:300px;bottom:-100px;left:-80px;background:radial-gradient(circle,rgba(160,120,255,.35),transparent 70%)"></div>
+
+    <div class="flex items-center gap-2.5 relative z-10">
+      <div class="flex-none grid place-items-center rounded-[30%]"
+           style="width:32px;height:32px;background:linear-gradient(140deg,var(--accent),#8b6ff0);box-shadow:var(--sh-accent)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 17l5-5 4 3 7-8"/><path d="M20 7h-4M20 7v4"/>
+        </svg>
+      </div>
+      <span class="text-xl font-extrabold tracking-tight text-white" style="letter-spacing:-.02em">Spendly</span>
+    </div>
+
+    <div class="relative z-10">
+      <h2 class="text-white font-extrabold leading-tight" style="font-size:38px;letter-spacing:-.025em">
+        Le tue spese,<br>finalmente sotto controllo.
+      </h2>
+      <p class="mt-4 text-base leading-relaxed" style="color:rgba(255,255,255,.78);max-width:380px">
+        Registra, categorizza e analizza ogni uscita. Budget chiari, zero fogli di calcolo.
+      </p>
+      <div class="mt-8 p-[18px] rounded-[var(--r-lg)]"
+           style="background:rgba(255,255,255,.12);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.2);max-width:320px">
+        <div class="text-[13px] font-semibold" style="color:rgba(255,255,255,.75)">Speso questo mese</div>
+        <div class="text-[34px] font-extrabold text-white mt-0.5" style="letter-spacing:-.02em">€1.248,60</div>
+        <div class="flex gap-1.5 mt-3.5">
+          <div class="h-2 flex-[32px] rounded-full" style="background:var(--c-food);opacity:.92"></div>
+          <div class="h-2 flex-[44px] rounded-full" style="background:var(--c-home);opacity:.92"></div>
+          <div class="h-2 flex-[12px] rounded-full" style="background:var(--c-fun);opacity:.92"></div>
+          <div class="h-2 flex-[24px] rounded-full" style="background:var(--c-shopping);opacity:.92"></div>
+          <div class="h-2 flex-[18px] rounded-full" style="background:var(--c-transport);opacity:.92"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="relative z-10 flex gap-6 text-[13px]" style="color:rgba(255,255,255,.7)">
+      <span>Crittografia end-to-end</span><span>·</span><span>GDPR compliant</span>
+    </div>
+  </div>
+
+  <!-- Form destra -->
+  <div class="flex items-center justify-center px-6 py-10" style="background:var(--bg)">
+    <div class="w-full max-w-[400px]" style="animation:fadeUp .4s ease">
+
+      <h1 class="text-[28px] font-extrabold" style="letter-spacing:-.02em;color:var(--text)">Crea il tuo account</h1>
+      <p class="mt-1.5 mb-7 text-[15px]" style="color:var(--text-2)">Gratis per sempre. Nessuna carta richiesta.</p>
+
+      <div class="flex items-center gap-3.5 my-5">
+        <div class="flex-1 h-px" style="background:var(--border)"></div>
+        <span class="text-[12.5px] font-medium" style="color:var(--text-3)">registrati con email</span>
+        <div class="flex-1 h-px" style="background:var(--border)"></div>
+      </div>
+
+      <form (ngSubmit)="submit()" class="flex flex-col gap-4">
+        <div class="flex flex-col gap-1.5">
+          <label class="text-[13.5px] font-semibold" style="color:var(--text)">Nome completo</label>
+          <input type="text" name="name" [ngModel]="name()" (ngModelChange)="name.set($event)"
+                 placeholder="Giulia Ferrari" required autocomplete="name"
+                 class="w-full px-3 py-2.5 rounded-[var(--r-md)] text-[14.5px] outline-none"
+                 style="background:var(--surface);border:1.5px solid var(--border-strong);color:var(--text)">
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label class="text-[13.5px] font-semibold" style="color:var(--text)">Email</label>
+          <div class="relative">
+            <svg class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" width="16" height="16"
+                 viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
+                 style="stroke:var(--text-3)">
+              <rect x="2.5" y="4.5" width="19" height="15" rx="2.5"/><path d="m3 6 9 7 9-7"/>
+            </svg>
+            <input type="email" name="email" [ngModel]="email()" (ngModelChange)="email.set($event)"
+                   placeholder="nome@email.it" required autocomplete="email"
+                   class="w-full pl-9 pr-3 py-2.5 rounded-[var(--r-md)] text-[14.5px] outline-none"
+                   style="background:var(--surface);border:1.5px solid var(--border-strong);color:var(--text)">
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label class="text-[13.5px] font-semibold" style="color:var(--text)">Password</label>
+          @if (!password()) {
+            <p class="text-[12.5px]" style="color:var(--text-3)">Almeno 8 caratteri, con maiuscole e numeri.</p>
+          }
+          <div class="relative">
+            <svg class="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" width="16" height="16"
+                 viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"
+                 style="stroke:var(--text-3)">
+              <rect x="4" y="10" width="16" height="11" rx="2.5"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/>
+            </svg>
+            <input [type]="showPassword() ? 'text' : 'password'" name="password"
+                   [ngModel]="password()" (ngModelChange)="password.set($event)"
+                   placeholder="Crea una password" required autocomplete="new-password"
+                   class="w-full pl-9 pr-10 py-2.5 rounded-[var(--r-md)] text-[14.5px] outline-none"
+                   style="background:var(--surface);border:1.5px solid var(--border-strong);color:var(--text)">
+            <button type="button" (click)="showPassword.set(!showPassword())"
+                    class="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 rounded-md"
+                    style="color:var(--text-3)">
+              @if (showPassword()) {
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 3l18 18M10.6 10.6a3 3 0 0 0 4.2 4.2M9.4 5.2A9.7 9.7 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.6 4.3M6.2 6.2A17 17 0 0 0 2 12s3.5 7 10 7a9.7 9.7 0 0 0 3-.5"/>
+                </svg>
+              } @else {
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>
+                </svg>
+              }
+            </button>
+          </div>
+
+          @if (password()) {
+            <div class="flex items-center gap-2.5 mt-1">
+              <div class="flex flex-1 gap-1">
+                @for (i of [1,2,3,4]; track i) {
+                  <div class="flex-1 h-[5px] rounded-full transition-all duration-300"
+                       [style.background]="i <= strength() ? strengthColor() : 'var(--surface-3)'"></div>
+                }
+              </div>
+              <span class="text-[12px] font-semibold min-w-[48px]" [style.color]="strengthColor()">{{ strengthLabel() }}</span>
+            </div>
+          }
+        </div>
+
+        <label class="flex items-start gap-2.5 text-[13.5px] leading-relaxed cursor-pointer" style="color:var(--text-2)">
+          <button type="button" (click)="accepted.set(!accepted())"
+                  class="mt-0.5 flex-none grid place-items-center rounded-[6px] transition-all duration-150"
+                  style="width:20px;height:20px;border:1.5px solid"
+                  [style.border-color]="accepted() ? 'var(--accent)' : 'var(--border-strong)'"
+                  [style.background]="accepted() ? 'var(--accent)' : 'var(--surface)'">
+            @if (accepted()) {
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12.5 10 17 19 7"/>
+              </svg>
+            }
+          </button>
+          <span>Accetto i <a href="#" class="font-semibold" style="color:var(--accent-700)">Termini</a> e la
+            <a href="#" class="font-semibold" style="color:var(--accent-700)">Privacy Policy</a>.</span>
+        </label>
+
+        @if (error()) {
+          <p class="text-[13.5px] px-3 py-2 rounded-[var(--r-sm)]"
+             style="background:var(--neg-soft);color:var(--neg)">{{ error() }}</p>
+        }
+
+        <button type="submit" [disabled]="loading() || !accepted()"
+                class="w-full py-3 rounded-[var(--r-md)] text-[15px] font-bold text-white transition-opacity disabled:opacity-50 mt-1"
+                style="background:var(--accent)">
+          {{ loading() ? 'Registrazione...' : 'Crea account' }}
+        </button>
+      </form>
+
+      <p class="text-center text-[14px] mt-6" style="color:var(--text-2)">
+        Hai già un account?
+        <a routerLink="/auth/login" class="font-bold ml-1" style="color:var(--accent-700)">Accedi</a>
+      </p>
+    </div>
+  </div>
+</div>

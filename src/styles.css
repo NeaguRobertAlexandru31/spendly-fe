@@ -1,3 +1,68 @@
-/* You can add global styles to this file, and also import other style files */
-
+@import url('https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700;800&display=swap');
 @import 'tailwindcss';
+
+:root {
+  --bg: oklch(0.985 0.004 285);
+  --surface: #ffffff;
+  --surface-2: oklch(0.974 0.004 285);
+  --surface-3: oklch(0.962 0.005 285);
+  --border: oklch(0.922 0.005 285);
+  --border-strong: oklch(0.880 0.007 285);
+
+  --text: oklch(0.255 0.012 285);
+  --text-2: oklch(0.470 0.012 285);
+  --text-3: oklch(0.620 0.012 285);
+
+  --accent: #6B4FD8;
+  --accent-600: #5d40cf;
+  --accent-700: #4f34bd;
+  --accent-soft: oklch(0.945 0.035 295);
+  --accent-soft-2: oklch(0.910 0.055 295);
+  --accent-ring: oklch(0.62 0.18 295 / 0.35);
+
+  --pos: #1f9d63;
+  --pos-soft: oklch(0.945 0.045 160);
+  --neg: #d8533f;
+  --neg-soft: oklch(0.950 0.038 35);
+  --warn: #c98a1a;
+
+  --r-xs: 7px;
+  --r-sm: 10px;
+  --r-md: 14px;
+  --r-lg: 18px;
+  --r-xl: 24px;
+
+  --sh-sm: 0 1px 3px oklch(0.4 0.02 285 / 0.07), 0 1px 2px oklch(0.4 0.02 285 / 0.05);
+  --sh-md: 0 4px 12px oklch(0.4 0.02 285 / 0.07), 0 2px 4px oklch(0.4 0.02 285 / 0.05);
+  --sh-accent: 0 6px 18px oklch(0.55 0.18 295 / 0.30);
+
+  --font: 'Schibsted Grotesk', system-ui, -apple-system, sans-serif;
+
+  --c-food: oklch(0.68 0.15 35);
+  --c-home: oklch(0.66 0.13 160);
+  --c-fun: oklch(0.66 0.16 320);
+  --c-shopping: oklch(0.68 0.15 15);
+  --c-transport: oklch(0.66 0.14 245);
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+}
+button { font-family: inherit; cursor: pointer; }
+input, select, textarea { font-family: inherit; }
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes popIn  { from { opacity: 0; transform: scale(0.96); }    to { opacity: 1; transform: none; } }
+
+.auth-grid { display: grid; grid-template-columns: 1.05fr 1fr; min-height: 100vh; }
+.auth-aside { display: flex; }
+
+@media (max-width: 900px) {
+  .auth-grid { grid-template-columns: 1fr; }
+  .auth-aside { display: none !important; }
+}
