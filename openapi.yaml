@@ -1,0 +1,742 @@
+openapi: 3.0.3
+info:
+  title: Spendly API
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+    description: Local
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: access_token
+
+  schemas:
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required: [message]
+
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        name:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, email, name, createdAt]
+
+    TransactionType:
+      type: string
+      enum: [INCOME, EXPENSE, CREDIT, DEBIT]
+
+    CategoryRef:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+      required: [id, name]
+
+    Transaction:
+      type: object
+      properties:
+        id:
+          type: string
+        amount:
+          type: string
+          example: '49.99'
+        currency:
+          type: string
+          example: EUR
+        date:
+          type: string
+          format: date-time
+        type:
+          $ref: '#/components/schemas/TransactionType'
+        description:
+          type: string
+          nullable: true
+        isRecurring:
+          type: boolean
+        recurringLabel:
+          type: string
+          nullable: true
+          example: Netflix
+        category:
+          $ref: '#/components/schemas/CategoryRef'
+          nullable: true
+        subCategory:
+          $ref: '#/components/schemas/CategoryRef'
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, amount, currency, date, type, isRecurring, createdAt, updatedAt]
+
+    SubCategory:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/TransactionType'
+        categoryId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, name, type, categoryId, createdAt, updatedAt]
+
+    Category:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          $ref: '#/components/schemas/TransactionType'
+        subCategories:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubCategory'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      required: [id, name, type, subCategories, createdAt, updatedAt]
+
+    CreateTransactionRequest:
+      type: object
+      properties:
+        amount:
+          type: string
+          pattern: '^\d+(\.\d{1,2})?$'
+          example: '49.99'
+        currency:
+          type: string
+          default: EUR
+          example: EUR
+        date:
+          type: string
+          format: date-time
+        type:
+          $ref: '#/components/schemas/TransactionType'
+        description:
+          type: string
+        isRecurring:
+          type: boolean
+          default: false
+        recurringLabel:
+          type: string
+          example: Netflix
+        categoryId:
+          type: string
+        subCategoryId:
+          type: string
+      required: [amount, date, type]
+
+paths:
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Registrazione nuovo utente — Cognito invia OTP via email
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+                  minLength: 8
+              required: [name, email, password]
+      responses:
+        '201':
+          description: Registrazione avviata — controlla email per il codice OTP
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400':
+          description: Email già in uso o dati non validi
+
+  /auth/confirm:
+    post:
+      tags: [Auth]
+      summary: Conferma email con codice OTP ricevuto da Cognito
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                code:
+                  type: string
+              required: [email, code]
+      responses:
+        '200':
+          description: Email confermata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400':
+          description: Codice non valido o scaduto
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login utente
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                password:
+                  type: string
+              required: [email, password]
+      responses:
+        '200':
+          description: Login effettuato — imposta cookie access_token e refresh_token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          description: Credenziali non valide
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Logout — revoca refresh token e cancella cookie
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Logout effettuato
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          description: Non autenticato
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Profilo utente corrente
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Dati utente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '401':
+          description: Non autenticato
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Rinnova access token tramite refresh token (cookie refresh_token)
+      responses:
+        '200':
+          description: Token aggiornati — nuovi cookie impostati
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '401':
+          description: Refresh token non valido o scaduto
+
+  /auth/forgot-password:
+    post:
+      tags: [Auth]
+      summary: Richiesta reset password — invia email con link
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+              required: [email]
+      responses:
+        '200':
+          description: Risposta sempre positiva per evitare user enumeration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+
+  /auth/reset-password:
+    post:
+      tags: [Auth]
+      summary: Reset password con codice OTP ricevuto via email da Cognito
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  format: email
+                code:
+                  type: string
+                password:
+                  type: string
+                  minLength: 8
+              required: [email, code, password]
+      responses:
+        '200':
+          description: Password reimpostata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400':
+          description: Token non valido o scaduto
+
+  /categories:
+    post:
+      tags: [Categories]
+      summary: Crea una nuova categoria
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                type:
+                  $ref: '#/components/schemas/TransactionType'
+              required: [name, type]
+      responses:
+        '201':
+          description: Categoria creata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '400':
+          description: Dati non validi
+        '401':
+          description: Non autenticato
+        '409':
+          description: Categoria già esistente
+
+    get:
+      tags: [Categories]
+      summary: Lista categorie dell'utente con sottocategorie
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Lista categorie
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+        '401':
+          description: Non autenticato
+
+  /categories/{id}:
+    get:
+      tags: [Categories]
+      summary: Dettaglio categoria con sottocategorie
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Categoria trovata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '401':
+          description: Non autenticato
+        '403':
+          description: Accesso negato
+        '404':
+          description: Categoria non trovata
+
+    patch:
+      tags: [Categories]
+      summary: Modifica nome o tipo di una categoria
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                type:
+                  $ref: '#/components/schemas/TransactionType'
+      responses:
+        '200':
+          description: Categoria aggiornata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '401':
+          description: Non autenticato
+        '403':
+          description: Accesso negato
+        '404':
+          description: Categoria non trovata
+        '409':
+          description: Nome già in uso
+
+    delete:
+      tags: [Categories]
+      summary: Elimina una categoria (e relative sottocategorie in cascade)
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Eliminata
+        '401':
+          description: Non autenticato
+        '403':
+          description: Accesso negato
+        '404':
+          description: Categoria non trovata
+
+  /categories/{id}/subcategories:
+    post:
+      tags: [Categories]
+      summary: Crea una sottocategoria
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                type:
+                  $ref: '#/components/schemas/TransactionType'
+              required: [name, type]
+      responses:
+        '201':
+          description: Sottocategoria creata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubCategory'
+        '400':
+          description: Dati non validi
+        '401':
+          description: Non autenticato
+        '403':
+          description: Accesso negato
+        '404':
+          description: Categoria non trovata
+        '409':
+          description: Sottocategoria già esistente
+
+  /categories/{id}/subcategories/{subId}:
+    patch:
+      tags: [Categories]
+      summary: Modifica una sottocategoria
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: subId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                type:
+                  $ref: '#/components/schemas/TransactionType'
+      responses:
+        '200':
+          description: Sottocategoria aggiornata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubCategory'
+        '401':
+          description: Non autenticato
+        '403':
+          description: Accesso negato
+        '404':
+          description: Sottocategoria non trovata
+        '409':
+          description: Nome già in uso
+
+    delete:
+      tags: [Categories]
+      summary: Elimina una sottocategoria
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: subId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Eliminata
+        '401':
+          description: Non autenticato
+        '403':
+          description: Accesso negato
+        '404':
+          description: Sottocategoria non trovata
+
+  /transactions:
+    post:
+      tags: [Transactions]
+      summary: Crea una nuova transazione
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTransactionRequest'
+      responses:
+        '201':
+          description: Transazione creata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '400':
+          description: Dati non validi
+        '401':
+          description: Non autenticato
+
+    get:
+      tags: [Transactions]
+      summary: Lista transazioni dell'utente corrente
+      security:
+        - cookieAuth: []
+      responses:
+        '200':
+          description: Lista transazioni
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Transaction'
+        '401':
+          description: Non autenticato
+
+  /transactions/{id}:
+    get:
+      tags: [Transactions]
+      summary: Dettaglio singola transazione
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Transazione trovata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '401':
+          description: Non autenticato
+        '403':
+          description: Accesso negato
+        '404':
+          description: Transazione non trovata
+
+    patch:
+      tags: [Transactions]
+      summary: Modifica una transazione esistente
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/CreateTransactionRequest'
+              description: Tutti i campi sono opzionali
+      responses:
+        '200':
+          description: Transazione aggiornata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '400':
+          description: Dati non validi
+        '401':
+          description: Non autenticato
+        '403':
+          description: Accesso negato
+        '404':
+          description: Transazione non trovata
+
+    delete:
+      tags: [Transactions]
+      summary: Elimina una transazione
+      security:
+        - cookieAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Eliminata
+        '401':
+          description: Non autenticato
+        '403':
+          description: Accesso negato
+        '404':
+          description: Transazione non trovata
+
+  /auth/change-password:
+    patch:
+      tags: [Auth]
+      summary: Cambio password (utente autenticato)
+      security:
+        - cookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                currentPassword:
+                  type: string
+                newPassword:
+                  type: string
+                  minLength: 8
+              required: [currentPassword, newPassword]
+      responses:
+        '200':
+          description: Password aggiornata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400':
+          description: Password corrente non corretta
+        '401':
+          description: Non autenticato
