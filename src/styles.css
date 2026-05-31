@@ -43,6 +43,13 @@
   --c-fun: oklch(0.66 0.16 320);
   --c-shopping: oklch(0.68 0.15 15);
   --c-transport: oklch(0.66 0.14 245);
+
+  --text-faint: oklch(0.730 0.010 285);
+  --border-strong: oklch(0.880 0.007 285);
+  --accent-soft-2: oklch(0.910 0.055 295);
+  --sh-xs: 0 1px 2px oklch(0.4 0.02 285 / 0.06);
+  --sh-lg: 0 12px 32px oklch(0.4 0.02 285 / 0.10), 0 4px 10px oklch(0.4 0.02 285 / 0.06);
+  --r-pill: 999px;
 }
 
 * { box-sizing: border-box; }

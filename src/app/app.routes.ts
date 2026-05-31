@@ -1,12 +1,13 @@
-import { Component } from '@angular/core';
 import { Routes } from '@angular/router';
 
-@Component({ standalone: true, template: `<div style="padding:40px;font-family:sans-serif"><h2>✅ Login riuscito — dashboard in arrivo</h2></div>` })
-class DashboardPlaceholder {}
+import { authGuard } from './core/guards/auth-guard/auth-guard';
+import { guestGuard } from './core/guards/guest-guard/guest-guard';
+import { Shell } from './shared/components/shell/shell';
 
 export const routes: Routes = [
   {
     path: 'auth',
+    canActivate: [guestGuard],
     children: [
       { path: 'login',           loadComponent: () => import('./features/auth/login/login').then(m => m.Login) },
       { path: 'register',        loadComponent: () => import('./features/auth/register/register').then(m => m.Register) },
@@ -16,7 +17,16 @@ export const routes: Routes = [
       { path: '',                redirectTo: 'login', pathMatch: 'full' },
     ],
   },
-  { path: 'dashboard', component: DashboardPlaceholder },
-  { path: '',          redirectTo: '/auth/login', pathMatch: 'full' },
-  { path: '**',        redirectTo: '/auth/login' },
+  {
+    path: '',
+    component: Shell,
+    canActivate: [authGuard],
+    children: [
+      { path: 'dashboard',    loadComponent: () => import('./features/dashboard/dashboard').then(m => m.Dashboard) },
+      { path: 'transactions', loadComponent: () => import('./features/transactions/transactions').then(m => m.Transactions) },
+      { path: 'settings',     loadComponent: () => import('./features/settings/settings').then(m => m.Settings) },
+      { path: '',             redirectTo: 'dashboard', pathMatch: 'full' },
+    ],
+  },
+  { path: '**', redirectTo: '/auth/login' },
 ];

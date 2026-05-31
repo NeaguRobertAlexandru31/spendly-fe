@@ -1,1 +1,101 @@
-<p>sidebar works!</p>
+<aside
+  class="flex flex-col sticky top-0 h-screen bg-white border-r border-[var(--border)] transition-[width] duration-200 ease-in-out shrink-0"
+  [style.width]="collapsed() ? '64px' : '248px'">
+
+  <!-- logo -->
+  <div class="h-16 shrink-0 flex items-center px-3">
+    <a routerLink="/dashboard" class="flex items-center no-underline">
+      <span class="shrink-0 w-10 h-10 flex items-center justify-center rounded-lg bg-[var(--accent)]">
+        <span class="text-white font-extrabold text-sm leading-none">S</span>
+      </span>
+      @if (!collapsed()) {
+        <span @label class="font-extrabold text-[var(--text)] whitespace-nowrap pl-2">Spendly</span>
+      }
+    </a>
+  </div>
+
+  <!-- nav -->
+  <nav class="flex flex-col gap-0.5 flex-1 py-2">
+
+    @for (item of nav; track item.route) {
+      <a #rla="routerLinkActive"
+         [routerLink]="item.route"
+         routerLinkActive
+         class="relative group mx-3 flex items-center h-11 rounded-[var(--r-md)] transition-colors no-underline hover:bg-[var(--surface-2)]"
+         [style.background]="rla.isActive ? 'var(--accent-soft)' : ''"
+         [style.color]="rla.isActive ? 'var(--accent-700)' : 'var(--text-2)'">
+        <span class="shrink-0 w-10 flex items-center justify-center">
+          <lucide-angular [img]="item.icon" [size]="20" />
+        </span>
+        @if (!collapsed()) {
+          <span @label class="font-semibold text-[13.5px] whitespace-nowrap pr-3">{{ item.label }}</span>
+        } @else {
+          <span class="pointer-events-none absolute left-full ml-2 top-1/2 -translate-y-1/2
+                       px-2.5 py-1.5 rounded-[var(--r-sm)] bg-[var(--text)] text-white
+                       text-xs font-semibold whitespace-nowrap z-50 shadow-[var(--sh-sm)]
+                       opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+            {{ item.label }}
+          </span>
+        }
+      </a>
+    }
+
+    <!-- toggle come voce nav -->
+    <button
+      (click)="toggle()"
+      class="relative group mt-1 mx-3 flex items-center h-11 rounded-[var(--r-md)] transition-colors
+             text-[var(--text-3)] hover:bg-[var(--surface-2)] hover:text-[var(--text)]
+             border-none bg-transparent">
+      <span class="shrink-0 w-10 flex items-center justify-center">
+        <lucide-angular [img]="collapsed() ? ChevronRight : ChevronLeft" [size]="20" />
+      </span>
+      @if (!collapsed()) {
+        <span @label class="font-semibold text-[13.5px] whitespace-nowrap pr-3">Comprimi</span>
+      } @else {
+        <span class="pointer-events-none absolute left-full ml-2 top-1/2 -translate-y-1/2
+                     px-2.5 py-1.5 rounded-[var(--r-sm)] bg-[var(--text)] text-white
+                     text-xs font-semibold whitespace-nowrap z-50 shadow-[var(--sh-sm)]
+                     opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+          Espandi
+        </span>
+      }
+    </button>
+
+  </nav>
+
+  <!-- budget mini widget -->
+  @if (!collapsed()) {
+    <div @label class="mx-3 mb-3">
+      <div class="p-3.5 rounded-[var(--r-md)] bg-[var(--surface-2)] border border-[var(--border)]">
+        <div class="flex justify-between text-xs font-semibold mb-2">
+          <span class="text-[var(--text-3)]">Budget mese</span>
+          <span class="tabular-nums text-[var(--text)]">72%</span>
+        </div>
+        <div class="w-full h-1.5 bg-[var(--border)] rounded-full overflow-hidden">
+          <div class="h-full bg-[var(--accent)] rounded-full" style="width: 72%"></div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- user -->
+  <div class="border-t border-[var(--border)] p-3 flex items-center shrink-0">
+    <span class="shrink-0 w-10 h-10 flex items-center justify-center rounded-full bg-[var(--accent-soft)] text-[var(--accent-700)] font-bold text-sm">
+      {{ initials() }}
+    </span>
+    @if (!collapsed()) {
+      <div @label class="flex-1 min-w-0 pl-2.5 pr-1">
+        <div class="text-[13.5px] font-bold truncate text-[var(--text)]">{{ user()?.name }}</div>
+        <div class="text-xs text-[var(--text-3)] truncate">{{ user()?.email }}</div>
+      </div>
+      <button @label
+        (click)="onLogout()"
+        class="shrink-0 w-8 h-8 flex items-center justify-center text-[var(--text-3)]
+               hover:text-[var(--text)] hover:bg-[var(--surface-2)] rounded-lg transition-colors
+               border-none bg-transparent">
+        <lucide-angular [img]="LogOut" [size]="17" />
+      </button>
+    }
+  </div>
+
+</aside>

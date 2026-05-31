@@ -15,7 +15,6 @@ import type {
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   readonly user = signal<AuthUser | null>(null);
-  readonly loading = signal(false);
 
   constructor(private readonly http: HttpClient) {}
 
@@ -28,20 +27,20 @@ export class AuthService {
   }
 
   login(dto: LoginRequest) {
-    return this.http.post<MessageResponse>('/api/auth/login', dto, { withCredentials: true }).pipe(
+    return this.http.post<MessageResponse>('/api/auth/login', dto).pipe(
       tap(() => this.fetchMe().subscribe()),
     );
   }
 
   logout() {
-    return this.http.post<MessageResponse>('/api/auth/logout', {}, { withCredentials: true }).pipe(
+    return this.http.post<MessageResponse>('/api/auth/logout', {}).pipe(
       tap(() => this.user.set(null)),
     );
   }
 
   fetchMe() {
-    return this.http.get<AuthUser>('/api/auth/me', { withCredentials: true }).pipe(
-      tap((u) => this.user.set(u)),
+    return this.http.get<AuthUser>('/api/auth/me').pipe(
+      tap(u => this.user.set(u)),
     );
   }
 
@@ -54,6 +53,6 @@ export class AuthService {
   }
 
   changePassword(dto: ChangePasswordRequest) {
-    return this.http.patch<MessageResponse>('/api/auth/change-password', dto, { withCredentials: true });
+    return this.http.patch<MessageResponse>('/api/auth/change-password', dto);
   }
 }
