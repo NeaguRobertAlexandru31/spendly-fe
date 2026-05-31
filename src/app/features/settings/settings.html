@@ -1,1 +1,21 @@
-<p>settings works!</p>
+<div class="settings-wrap">
+
+  <div class="settings-header">
+    <h1 class="settings-title">Impostazioni</h1>
+  </div>
+
+  <div class="settings-tabs">
+    @for (tab of tabs; track tab.route) {
+      <a
+        class="settings-tab"
+        [routerLink]="tab.route"
+        routerLinkActive="settings-tab--active"
+      >{{ tab.label }}</a>
+    }
+  </div>
+
+  <div class="settings-content">
+    <router-outlet />
+  </div>
+
+</div>

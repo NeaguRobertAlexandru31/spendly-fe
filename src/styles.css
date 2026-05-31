@@ -39,10 +39,21 @@
   --font: 'Schibsted Grotesk', system-ui, -apple-system, sans-serif;
 
   --c-food: oklch(0.68 0.15 35);
+  --c-food-soft: oklch(0.945 0.040 40);
   --c-home: oklch(0.66 0.13 160);
+  --c-home-soft: oklch(0.945 0.038 165);
   --c-fun: oklch(0.66 0.16 320);
+  --c-fun-soft: oklch(0.945 0.040 320);
   --c-shopping: oklch(0.68 0.15 15);
+  --c-shopping-soft: oklch(0.948 0.038 20);
   --c-transport: oklch(0.66 0.14 245);
+  --c-transport-soft: oklch(0.945 0.038 245);
+  --c-health: oklch(0.68 0.14 200);
+  --c-health-soft: oklch(0.945 0.036 200);
+  --c-other: oklch(0.66 0.04 285);
+  --c-other-soft: oklch(0.950 0.010 285);
+  --warn-soft: oklch(0.955 0.045 80);
+  --surface-3: oklch(0.962 0.005 285);
 
   --text-faint: oklch(0.730 0.010 285);
   --border-strong: oklch(0.880 0.007 285);
@@ -63,8 +74,10 @@ body {
 button { font-family: inherit; cursor: pointer; }
 input, select, textarea { font-family: inherit; }
 
-@keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-@keyframes popIn  { from { opacity: 0; transform: scale(0.96); }    to { opacity: 1; transform: none; } }
+@keyframes fadeUp  { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes fadeIn  { from { opacity: 0; }                            to { opacity: 1; transform: none; } }
+@keyframes popIn   { from { opacity: 0; transform: scale(0.96); }    to { opacity: 1; transform: none; } }
+@keyframes sheetUp { from { transform: translateY(100%); }           to { transform: none; } }
 
 .auth-grid { display: grid; grid-template-columns: 1.05fr 1fr; min-height: 100vh; }
 .auth-aside { display: flex; }

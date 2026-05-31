@@ -1,9 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 
 @Component({
   selector: 'app-preferences',
+  standalone: true,
   imports: [],
   templateUrl: './preferences.html',
-  styleUrl: './preferences.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Preferences {}

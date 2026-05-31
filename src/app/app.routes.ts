@@ -24,7 +24,16 @@ export const routes: Routes = [
     children: [
       { path: 'dashboard',    loadComponent: () => import('./features/dashboard/dashboard').then(m => m.Dashboard) },
       { path: 'transactions', loadComponent: () => import('./features/transactions/transactions').then(m => m.Transactions) },
-      { path: 'settings',     loadComponent: () => import('./features/settings/settings').then(m => m.Settings) },
+      {
+        path: 'settings',
+        loadComponent: () => import('./features/settings/settings').then(m => m.Settings),
+        children: [
+          { path: 'categories',  loadComponent: () => import('./features/settings/categories/categories').then(m => m.Categories) },
+          { path: 'profile',     loadComponent: () => import('./features/settings/profile/profile').then(m => m.Profile) },
+          { path: 'preferences', loadComponent: () => import('./features/settings/preferences/preferences').then(m => m.Preferences) },
+          { path: '',            redirectTo: 'categories', pathMatch: 'full' },
+        ],
+      },
       { path: '',             redirectTo: 'dashboard', pathMatch: 'full' },
     ],
   },

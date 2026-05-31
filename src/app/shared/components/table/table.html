@@ -1,1 +1,48 @@
-<p>table works!</p>
+<div class="overflow-x-auto">
+  <table class="w-full border-collapse" style="min-width: 680px">
+    <thead>
+      <tr style="background: var(--surface-2)">
+        @for (col of columns(); track col.key) {
+          <th
+            [style.text-align]="col.align ?? 'left'"
+            [style.width]="col.width ?? 'auto'"
+            [style.cursor]="col.sortable ? 'pointer' : 'default'"
+            [style.padding-left]="$first ? '22px' : '14px'"
+            [style.padding-right]="$last ? '22px' : '14px'"
+            class="th-cell select-none whitespace-nowrap"
+            (click)="onSort(col)"
+          >
+            <span class="inline-flex items-center gap-1.5"
+              [class.justify-end]="col.align === 'right'">
+              {{ col.label }}
+              @if (col.sortable) {
+                @if (isSorted(col.key) === 'asc') {
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+                    style="color: var(--accent)">
+                    <path d="M12 19V5M6 11l6-6 6 6"/>
+                  </svg>
+                } @else if (isSorted(col.key) === 'desc') {
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+                    style="color: var(--accent)">
+                    <path d="M12 5v14M6 13l6 6 6-6"/>
+                  </svg>
+                } @else {
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
+                    style="color: var(--text-faint)">
+                    <path d="M12 19V5M6 11l6-6 6 6"/>
+                  </svg>
+                }
+              }
+            </span>
+          </th>
+        }
+      </tr>
+    </thead>
+    <tbody>
+      <ng-content />
+    </tbody>
+  </table>
+</div>

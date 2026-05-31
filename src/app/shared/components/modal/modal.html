@@ -1,1 +1,16 @@
-<p>modal works!</p>
+@if (open()) {
+  <div
+    class="fixed inset-0 z-50 flex items-end justify-center"
+    style="background: oklch(0.25 0.02 285 / 0.45); backdrop-filter: blur(3px); animation: fadeIn .2s ease"
+    (click)="onOverlayClick()"
+  >
+    <div
+      class="w-full flex flex-col"
+      [style.max-width.px]="width()"
+      style="background: var(--surface); border-radius: var(--r-xl) var(--r-xl) 0 0; box-shadow: var(--sh-lg); max-height: 94vh; animation: sheetUp .25s cubic-bezier(.2,.8,.3,1)"
+      (click)="$event.stopPropagation()"
+    >
+      <ng-content />
+    </div>
+  </div>
+}
