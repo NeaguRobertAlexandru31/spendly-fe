@@ -1,4 +1,4 @@
-export type TransactionType = 'INCOME' | 'EXPENSE' | 'CREDIT' | 'DEBIT';
+export type TransactionType = 'INCOME' | 'EXPENSE' | 'CREDIT' | 'DEBIT' | 'OPENING_BALANCE';
 
 export interface CategoryRef {
   id: string;

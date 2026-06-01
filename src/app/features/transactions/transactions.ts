@@ -3,6 +3,7 @@ import {
   ChangeDetectionStrategy,
   signal,
   computed,
+  effect,
   inject,
   HostListener,
 } from '@angular/core';
@@ -16,7 +17,9 @@ import type { Transaction, CreateTransactionRequest } from '@core/models/transac
 import type { Category } from '@core/models/category.model';
 import type { TransactionType } from '@core/models/category.model';
 
-type FilterPeriod = '7' | '30' | '90' | 'all';
+interface TransactionRow extends Transaction {
+  projected?: boolean;
+}
 
 const CATEGORY_COLORS: Record<string, string> = {
   Cibo: 'var(--c-food)',
@@ -44,18 +47,12 @@ function categorySoft(name: string | undefined): string {
   return CATEGORY_SOFT[name] ?? 'var(--c-other-soft)';
 }
 
-const PERIOD_OPTS: { value: FilterPeriod; label: string }[] = [
-  { value: '7', label: '7 giorni' },
-  { value: '30', label: '30 giorni' },
-  { value: '90', label: '90 giorni' },
-  { value: 'all', label: 'Sempre' },
-];
-
 const TYPE_LABELS: Record<TransactionType, string> = {
   INCOME: 'Entrata',
   EXPENSE: 'Spesa',
   CREDIT: 'Credito',
   DEBIT: 'Debito',
+  OPENING_BALANCE: 'Saldo iniziale',
 };
 
 @Component({
@@ -70,20 +67,29 @@ export class Transactions {
   private readonly transactionService = inject(TransactionService);
   private readonly categoryService = inject(CategoryService);
 
-  readonly periodOpts = PERIOD_OPTS;
   readonly typeLabels = TYPE_LABELS;
   readonly typeOptions: TransactionType[] = ['INCOME', 'EXPENSE', 'CREDIT', 'DEBIT'];
+
+  // ── opening balance modal ─────────────────────────────────────────────────
+  readonly openingModalOpen = signal(false);
+  readonly openingAmount = signal('');
+  readonly openingSubmitting = signal(false);
+  readonly openingError = signal<string | null>(null);
 
   readonly transactions = signal<Transaction[]>([]);
   readonly categories = signal<Category[]>([]);
   readonly loading = signal(true);
   readonly error = signal<string | null>(null);
 
+  // ── month navigation ──────────────────────────────────────────────────────
+  private readonly _now = new Date();
+  readonly selectedYear = signal(this._now.getFullYear());
+  readonly selectedMonth = signal(this._now.getMonth()); // 0-based
+
   // ── filter state ──────────────────────────────────────────────────────────
   readonly search = signal('');
   readonly filterCategoryIds = signal<string[]>([]);
   readonly filterTypes = signal<TransactionType[]>([]);
-  readonly filterPeriod = signal<FilterPeriod>('30');
   readonly filterOnlyRecurring = signal(false);
   readonly sort = signal<SortState>({ key: 'date', dir: 'desc' });
 
@@ -107,7 +113,6 @@ export class Transactions {
   // ── dropdown open state ───────────────────────────────────────────────────
   readonly filterCategoryDropdownOpen = signal(false);
   readonly filterTypeDropdownOpen = signal(false);
-  readonly filterPeriodDropdownOpen = signal(false);
 
   readonly tableColumns: TableColumn<Transaction>[] = [
     { key: 'category', label: 'Categoria', sortable: true },
@@ -141,32 +146,59 @@ export class Transactions {
     return cat.subCategories.filter(s => s.type === this.formType());
   });
 
+  // ── month computed ────────────────────────────────────────────────────────
+
+  readonly selectedMonthLabel = computed(() => {
+    const d = new Date(this.selectedYear(), this.selectedMonth(), 1);
+    return d.toLocaleDateString('it-IT', { month: 'long', year: 'numeric' });
+  });
+
+  readonly isCurrentMonth = computed(() => {
+    const n = new Date();
+    return this.selectedYear() === n.getFullYear() && this.selectedMonth() === n.getMonth();
+  });
+
   // ── filter computed ───────────────────────────────────────────────────────
 
   readonly activeFilterCount = computed(() =>
     this.filterCategoryIds().length +
     this.filterTypes().length +
-    (this.filterPeriod() !== '30' ? 1 : 0) +
     (this.filterOnlyRecurring() ? 1 : 0)
   );
 
-  readonly filtered = computed(() => {
-    const now = Date.now();
-    const period = this.filterPeriod();
+  readonly filtered = computed((): TransactionRow[] => {
+    const year = this.selectedYear();
+    const month = this.selectedMonth();
     const search = this.search().toLowerCase();
     const catIds = this.filterCategoryIds();
     const types = this.filterTypes();
     const onlyRec = this.filterOnlyRecurring();
     const s = this.sort();
 
-    let rows = this.transactions().filter(t => {
+    // Transazioni reali del mese selezionato
+    const now = new Date();
+    const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+
+    // Template ricorrenti già materializzate dal cron in questo mese: vanno nascoste
+    const generatedTemplateIds = new Set(
+      this.transactions()
+        .filter(t => {
+          if (!t.recurringTemplateId) return false;
+          const d = new Date(t.date);
+          return d.getFullYear() === year && d.getMonth() === month;
+        })
+        .map(t => t.recurringTemplateId as string)
+    );
+
+    const realRows: TransactionRow[] = this.transactions().filter(t => {
+      const d = new Date(t.date);
+      if (d.getFullYear() !== year || d.getMonth() !== month) return false;
+      if (t.type === 'OPENING_BALANCE') return false; // mostrato separatamente
+      // Nasconde la template se il cron ha già creato la copia reale per questo mese
+      if (t.isRecurring && generatedTemplateIds.has(t.id)) return false;
       if (catIds.length && (!t.category || !catIds.includes(t.category.id))) return false;
       if (types.length && !types.includes(t.type)) return false;
       if (onlyRec && !t.isRecurring) return false;
-      if (period !== 'all') {
-        const days = (now - new Date(t.date).getTime()) / 86400000;
-        if (days > +period) return false;
-      }
       if (search) {
         const inDesc = t.description?.toLowerCase().includes(search) ?? false;
         const inCat = t.category?.name.toLowerCase().includes(search) ?? false;
@@ -174,7 +206,56 @@ export class Transactions {
         if (!inDesc && !inCat && !inSub) return false;
       }
       return true;
+    }).map(t => {
+      const d = new Date(t.date);
+      const isFuture = new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime() > todayMidnight;
+      return isFuture ? { ...t, projected: true } : t;
     });
+
+    // Proiezioni solo per mesi strettamente futuri rispetto ad oggi
+    const isStrictlyFuture =
+      year > now.getFullYear() ||
+      (year === now.getFullYear() && month > now.getMonth());
+
+    const realRecurringLabels = new Set(
+      realRows.filter(r => r.isRecurring).map(r => r.recurringLabel ?? r.id)
+    );
+
+    const projectedRows: TransactionRow[] = [];
+    const selectedMonthStart = new Date(year, month, 1).getTime();
+
+    for (const t of this.transactions()) {
+      if (!isStrictlyFuture) break; // nel mese corrente o passato, nessuna proiezione
+      if (!t.isRecurring) continue;
+      const originDate = new Date(t.date);
+      const originMonthStart = new Date(originDate.getFullYear(), originDate.getMonth(), 1).getTime();
+      if (originMonthStart >= selectedMonthStart) continue; // solo mesi precedenti
+
+      const key = t.recurringLabel ?? t.id;
+      if (realRecurringLabels.has(key)) continue; // già presente come reale
+
+      if (catIds.length && (!t.category || !catIds.includes(t.category.id))) continue;
+      if (types.length && !types.includes(t.type)) continue;
+      if (onlyRec && !t.isRecurring) continue;
+      if (search) {
+        const inDesc = t.description?.toLowerCase().includes(search) ?? false;
+        const inCat = t.category?.name.toLowerCase().includes(search) ?? false;
+        const inSub = t.subCategory?.name.toLowerCase().includes(search) ?? false;
+        if (!inDesc && !inCat && !inSub) continue;
+      }
+
+      // Proietta la data sul giorno originale nel mese selezionato
+      const projectedDay = Math.min(
+        originDate.getDate(),
+        new Date(year, month + 1, 0).getDate()
+      );
+      const projectedDate = new Date(year, month, projectedDay).toISOString();
+
+      projectedRows.push({ ...t, id: `${t.id}_proj_${year}_${month}`, date: projectedDate, projected: true });
+      realRecurringLabels.add(key); // evita duplicati se stesso template compare più volte
+    }
+
+    let rows: TransactionRow[] = [...realRows, ...projectedRows];
 
     rows = [...rows].sort((a, b) => {
       let r = 0;
@@ -194,12 +275,132 @@ export class Transactions {
       .reduce((sum, t) => sum + parseFloat(t.amount), 0)
   );
 
-  readonly currentPeriodLabel = computed(
-    () => PERIOD_OPTS.find(p => p.value === this.filterPeriod())?.label ?? '30 giorni'
+  readonly projectedAmount = computed(() =>
+    this.filtered()
+      .filter(t => t.projected && (t.type === 'EXPENSE' || t.type === 'DEBIT'))
+      .reduce((sum, t) => sum + parseFloat(t.amount), 0)
   );
+
+  // Il record OPENING_BALANCE salvato nel DB (esiste solo per il mese "seme")
+  readonly storedOpeningBalance = computed((): Transaction | null => {
+    return this.transactions().find(t => t.type === 'OPENING_BALANCE') ?? null;
+  });
+
+  // Calcola il saldo netto di un mese (entrate - spese, esclusi OPENING_BALANCE e proiezioni)
+  private monthNet(year: number, month: number): number {
+    return this.transactions()
+      .filter(t => {
+        if (t.type === 'OPENING_BALANCE') return false;
+        const d = new Date(t.date);
+        return d.getFullYear() === year && d.getMonth() === month;
+      })
+      .reduce((sum, t) => {
+        const v = parseFloat(t.amount);
+        if (t.type === 'INCOME' || t.type === 'CREDIT') return sum + v;
+        if (t.type === 'EXPENSE' || t.type === 'DEBIT') return sum - v;
+        return sum;
+      }, 0);
+  }
+
+  // Saldo iniziale del mese selezionato (cascata dal mese seme)
+  readonly openingBalanceAmount = computed((): number | null => {
+    const ob = this.storedOpeningBalance();
+    if (!ob) return null;
+
+    const obDate = new Date(ob.date);
+    const obYear = obDate.getFullYear();
+    const obMonth = obDate.getMonth();
+    const selYear = this.selectedYear();
+    const selMonth = this.selectedMonth();
+
+    // Mesi precedenti al mese seme: nessun dato
+    const obIdx = obYear * 12 + obMonth;
+    const selIdx = selYear * 12 + selMonth;
+    if (selIdx < obIdx) return null;
+
+    // Calcola a cascata da obIdx a selIdx
+    let balance = parseFloat(ob.amount);
+    for (let idx = obIdx; idx < selIdx; idx++) {
+      const y = Math.floor(idx / 12);
+      const m = idx % 12;
+      balance += this.monthNet(y, m);
+    }
+    return balance;
+  });
+
+  // Il mese selezionato è esattamente il mese seme (modificabile)
+  readonly isOpeningBalanceEditable = computed((): boolean => {
+    const ob = this.storedOpeningBalance();
+    if (!ob) return true; // nessun seme ancora — permetti di crearlo
+    const obDate = new Date(ob.date);
+    return obDate.getFullYear() === this.selectedYear() && obDate.getMonth() === this.selectedMonth();
+  });
+
+  readonly actualAmount = computed(() =>
+    this.filtered()
+      .filter(t => !t.projected && (t.type === 'EXPENSE' || t.type === 'DEBIT'))
+      .reduce((sum, t) => sum + parseFloat(t.amount), 0)
+  );
+
+  readonly actualCount = computed(() =>
+    this.filtered().filter(t => !t.projected).length
+  );
+
+  readonly projectedCount = computed(() =>
+    this.filtered().filter(t => t.projected).length
+  );
+
+  // ── pagination ────────────────────────────────────────────────────────────
+  readonly PAGE_SIZE = 10;
+  readonly currentPage = signal(1);
+
+  readonly totalPages = computed(() =>
+    Math.max(1, Math.ceil(this.filtered().length / this.PAGE_SIZE))
+  );
+
+  readonly pagedRows = computed(() => {
+    const page = this.currentPage();
+    const start = (page - 1) * this.PAGE_SIZE;
+    return this.filtered().slice(start, start + this.PAGE_SIZE);
+  });
+
+  readonly pageNumbers = computed(() => {
+    const total = this.totalPages();
+    const current = this.currentPage();
+    const pages: (number | '...')[] = [];
+    if (total <= 7) {
+      for (let i = 1; i <= total; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (current > 3) pages.push('...');
+      for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) pages.push(i);
+      if (current < total - 2) pages.push('...');
+      pages.push(total);
+    }
+    return pages;
+  });
 
   constructor() {
     this.loadData();
+    // Reset pagina quando cambiano filtri o mese
+    effect(() => {
+      this.filtered();
+      this.currentPage.set(1);
+    });
+  }
+
+  goToPage(page: number | '...') {
+    if (page === '...') return;
+    if (page < 1 || page > this.totalPages()) return;
+    this.currentPage.set(page);
+  }
+
+  prevPage() {
+    if (this.currentPage() > 1) this.currentPage.update(p => p - 1);
+  }
+
+  nextPage() {
+    if (this.currentPage() < this.totalPages()) this.currentPage.update(p => p + 1);
   }
 
   private loadData() {
@@ -257,6 +458,32 @@ export class Transactions {
   categoryColor(name: string | undefined) { return categoryColor(name); }
   categorySoft(name: string | undefined) { return categorySoft(name); }
 
+  // ── month navigation ──────────────────────────────────────────────────────
+
+  prevMonth() {
+    if (this.selectedMonth() === 0) {
+      this.selectedMonth.set(11);
+      this.selectedYear.update(y => y - 1);
+    } else {
+      this.selectedMonth.update(m => m - 1);
+    }
+  }
+
+  nextMonth() {
+    if (this.selectedMonth() === 11) {
+      this.selectedMonth.set(0);
+      this.selectedYear.update(y => y + 1);
+    } else {
+      this.selectedMonth.update(m => m + 1);
+    }
+  }
+
+  goToCurrentMonth() {
+    const n = new Date();
+    this.selectedYear.set(n.getFullYear());
+    this.selectedMonth.set(n.getMonth());
+  }
+
   // ── filter actions ────────────────────────────────────────────────────────
 
   isCategorySelected(id: string): boolean {
@@ -281,15 +508,9 @@ export class Transactions {
     );
   }
 
-  setPeriod(p: FilterPeriod) {
-    this.filterPeriod.set(p);
-    this.filterPeriodDropdownOpen.set(false);
-  }
-
   clearFilters() {
     this.filterCategoryIds.set([]);
     this.filterTypes.set([]);
-    this.filterPeriod.set('30');
     this.filterOnlyRecurring.set(false);
     this.search.set('');
   }
@@ -316,7 +537,9 @@ export class Transactions {
     this.modalOpen.set(true);
   }
 
-  openEdit(t: Transaction) {
+  openEdit(t: TransactionRow) {
+    // Blocca solo le proiezioni sintetiche (ID fittizio), non le transazioni reali future
+    if (t.projected && t.id.includes('_proj_')) return;
     this.editingTransaction.set(t);
     this.deleteConfirm.set(false);
     const rawAmount = parseFloat(t.amount).toFixed(2).replace('.', ',');
@@ -443,12 +666,63 @@ export class Transactions {
     return this.formSubCategoryId() === id;
   }
 
+  // ── opening balance modal ─────────────────────────────────────────────────
+
+  openOpeningModal() {
+    if (!this.isOpeningBalanceEditable()) return;
+    const ob = this.storedOpeningBalance();
+    const current = ob ? parseFloat(ob.amount).toFixed(2).replace('.', ',') : '0,00';
+    this.openingAmount.set(current);
+    this.openingError.set(null);
+    this.openingModalOpen.set(true);
+  }
+
+  closeOpeningModal() {
+    this.openingModalOpen.set(false);
+  }
+
+  saveOpeningBalance() {
+    const raw = this.openingAmount().replace(',', '.');
+    const amount = parseFloat(raw);
+    if (isNaN(amount) || amount < 0) {
+      this.openingError.set('Inserisci un importo valido (≥ 0).');
+      return;
+    }
+    this.openingSubmitting.set(true);
+    this.openingError.set(null);
+    // Il seme è sempre riferito al mese del record esistente (o al mese selezionato se primo inserimento)
+    const ob = this.storedOpeningBalance();
+    const obDate = ob ? new Date(ob.date) : null;
+    const year = obDate ? obDate.getFullYear() : this.selectedYear();
+    const month = obDate ? obDate.getMonth() : this.selectedMonth();
+    this.transactionService
+      .upsertOpeningBalance(year, month, amount.toFixed(2))
+      .subscribe({
+        next: (saved) => {
+          this.transactions.update(list => {
+            const idx = list.findIndex(t => t.type === 'OPENING_BALANCE');
+            if (idx >= 0) {
+              const updated = [...list];
+              updated[idx] = saved;
+              return updated;
+            }
+            return [saved, ...list];
+          });
+          this.openingSubmitting.set(false);
+          this.closeOpeningModal();
+        },
+        error: () => {
+          this.openingError.set('Errore durante il salvataggio. Riprova.');
+          this.openingSubmitting.set(false);
+        },
+      });
+  }
+
   // ── dropdown close-on-outside-click ──────────────────────────────────────
 
   closeAllDropdowns() {
     this.filterCategoryDropdownOpen.set(false);
     this.filterTypeDropdownOpen.set(false);
-    this.filterPeriodDropdownOpen.set(false);
   }
 
   @HostListener('document:click', ['$event'])

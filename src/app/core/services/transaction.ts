@@ -29,4 +29,8 @@ export class TransactionService {
   delete(id: string) {
     return this.http.delete<void>(`/api/transactions/${id}`);
   }
+
+  upsertOpeningBalance(year: number, month: number, amount: string) {
+    return this.http.patch<Transaction>(`/api/transactions/opening-balance/${year}/${month}`, { amount });
+  }
 }

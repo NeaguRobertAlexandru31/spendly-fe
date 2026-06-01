@@ -20,15 +20,17 @@ const TYPE_LABELS: Record<TransactionType, string> = {
   INCOME: 'Entrata',
   DEBIT:  'Debito',
   CREDIT: 'Credito',
+  OPENING_BALANCE: 'Saldo iniziale',
 };
 
 const TYPE_ORDER: TransactionType[] = ['EXPENSE', 'INCOME', 'DEBIT', 'CREDIT'];
 
 const TYPE_PILL_STYLE: Record<TransactionType, { bg: string; fg: string }> = {
-  EXPENSE: { bg: 'var(--neg-soft)',    fg: 'var(--neg)' },
-  INCOME:  { bg: 'var(--pos-soft)',    fg: 'var(--pos)' },
-  DEBIT:   { bg: 'var(--warn-soft)',   fg: 'var(--warn)' },
-  CREDIT:  { bg: 'var(--accent-soft)', fg: 'var(--accent-700)' },
+  EXPENSE:         { bg: 'var(--neg-soft)',    fg: 'var(--neg)' },
+  INCOME:          { bg: 'var(--pos-soft)',    fg: 'var(--pos)' },
+  DEBIT:           { bg: 'var(--warn-soft)',   fg: 'var(--warn)' },
+  CREDIT:          { bg: 'var(--accent-soft)', fg: 'var(--accent-700)' },
+  OPENING_BALANCE: { bg: 'var(--surface-2)',   fg: 'var(--text-3)' },
 };
 
 const CATEGORY_COLORS: Record<string, string> = {

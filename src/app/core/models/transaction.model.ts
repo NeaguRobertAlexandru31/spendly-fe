@@ -9,6 +9,7 @@ export interface Transaction {
   description?: string | null;
   isRecurring: boolean;
   recurringLabel?: string | null;
+  recurringTemplateId?: string | null;
   category?: CategoryRef | null;
   subCategory?: CategoryRef | null;
   createdAt: string;

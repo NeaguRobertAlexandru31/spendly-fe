@@ -8,7 +8,10 @@
         <p class="page-sub">
           <b>{{ filtered().length }}</b> transazioni
           @if (filtered().length) {
-            &middot; totale spese <b>{{ formatTotal(totalAmount()) }}</b>
+            &middot; spese <b>{{ formatTotal(totalAmount()) }}</b>
+          }
+          @if (projectedAmount() > 0) {
+            &middot; previste <b>{{ formatTotal(projectedAmount()) }}</b>
           }
         </p>
       }
@@ -23,6 +26,22 @@
         Aggiungi
       </button>
     </div>
+  </div>
+
+  <!-- MONTH NAVIGATOR -->
+  <div class="month-nav">
+    <button class="month-nav-btn" (click)="prevMonth()" title="Mese precedente">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
+    <div class="month-nav-center">
+      <span class="month-nav-label">{{ selectedMonthLabel() }}</span>
+      @if (!isCurrentMonth()) {
+        <button class="month-nav-today" (click)="goToCurrentMonth()">Oggi</button>
+      }
+    </div>
+    <button class="month-nav-btn" (click)="nextMonth()" title="Mese successivo">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+    </button>
   </div>
 
   <!-- TOOLBAR -->
@@ -112,35 +131,6 @@
       }
     </div>
 
-    <!-- period filter -->
-    <div class="dropdown-wrap">
-      <button
-        class="filter-btn"
-        [class.filter-btn--active]="filterPeriod() !== '30'"
-        (click)="filterPeriodDropdownOpen.set(!filterPeriodDropdownOpen())"
-      >
-        {{ currentPeriodLabel() }}
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"
-          [style.transform]="filterPeriodDropdownOpen() ? 'rotate(180deg)' : 'none'" style="transition: transform .2s">
-          <path d="m6 9 6 6 6-6"/>
-        </svg>
-      </button>
-      @if (filterPeriodDropdownOpen()) {
-        <div class="dropdown-panel" style="width: 160px">
-          @for (opt of periodOpts; track opt.value) {
-            <button class="dropdown-item" (click)="setPeriod(opt.value)">
-              <span class="check-box" [class.check-box--checked]="filterPeriod() === opt.value">
-                @if (filterPeriod() === opt.value) {
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17 19 7"/></svg>
-                }
-              </span>
-              {{ opt.label }}
-            </button>
-          }
-        </div>
-      }
-    </div>
-
     <!-- recurring toggle -->
     <button
       class="filter-btn"
@@ -158,6 +148,65 @@
       </button>
     }
   </div>
+
+  <!-- SUMMARY CARDS -->
+  @if (!loading() && !error()) {
+    <div class="summary-cards">
+      <div class="summary-card summary-card--actual">
+        <div class="summary-card-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M12 6v6l4 2"/></svg>
+        </div>
+        <div class="summary-card-body">
+          <div class="summary-card-label">Spese avvenute</div>
+          <div class="summary-card-value">{{ formatTotal(actualAmount()) }}</div>
+          <div class="summary-card-count">{{ actualCount() }} transazioni</div>
+        </div>
+      </div>
+      <div class="summary-card summary-card--projected">
+        <div class="summary-card-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l3 3-3 3"/><path d="M3 11V9a4 4 0 0 1 4-4h13"/><path d="M7 22l-3-3 3-3"/><path d="M21 13v2a4 4 0 0 1-4 4H4"/></svg>
+        </div>
+        <div class="summary-card-body">
+          <div class="summary-card-label">Spese previste</div>
+          <div class="summary-card-value">{{ formatTotal(projectedAmount()) }}</div>
+          <div class="summary-card-count">{{ projectedCount() }} ricorrenti</div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- OPENING BALANCE ROW -->
+  @if (!loading() && !error()) {
+    <div
+      class="opening-balance-row"
+      [class.opening-balance-row--readonly]="!isOpeningBalanceEditable()"
+      (click)="openOpeningModal()"
+    >
+      <div class="ob-left">
+        <div class="ob-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="13" rx="2.5"/><path d="M2 10h20"/><circle cx="6" cy="15" r="1.2" fill="currentColor" stroke="none"/></svg>
+        </div>
+        <div>
+          <div class="ob-label">Saldo iniziale del mese</div>
+          @if (isOpeningBalanceEditable()) {
+            <div class="ob-hint">Clicca per modificare</div>
+          } @else if (openingBalanceAmount() !== null) {
+            <div class="ob-hint">Calcolato dal mese precedente</div>
+          } @else {
+            <div class="ob-hint ob-hint--warn">Imposta il saldo nel mese da cui vuoi partire</div>
+          }
+        </div>
+      </div>
+      <div class="ob-amount" [class.ob-amount--null]="openingBalanceAmount() === null">
+        {{ openingBalanceAmount() !== null ? formatTotal(openingBalanceAmount()!) : '—' }}
+      </div>
+      @if (isOpeningBalanceEditable()) {
+        <div class="ob-edit-icon">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L18.5 9.5a2 2 0 0 0-3-3L5 17v3zM14 7l3 3"/></svg>
+        </div>
+      }
+    </div>
+  }
 
   <!-- TABLE CARD -->
   <div class="table-card">
@@ -177,14 +226,14 @@
       </div>
     } @else {
       <app-table [columns]="tableColumns" [sort]="sort()" (sortChanged)="onSortChanged($event)">
-        @for (t of filtered(); track t.id) {
-          <tr class="table-row" (click)="openEdit(t)">
+        @for (t of pagedRows(); track t.id) {
+          <tr class="table-row" [class.table-row--projected]="t.projected && t.id.includes('_proj_')" (click)="openEdit(t)">
             <!-- category -->
             <td class="td td--first">
               <div class="cat-cell">
                 <div class="cat-icon"
-                  [style.background]="categorySoft(t.category?.name)"
-                  [style.color]="categoryColor(t.category?.name)">
+                  [style.background]="t.projected ? 'var(--surface-2)' : categorySoft(t.category?.name)"
+                  [style.color]="t.projected ? 'var(--text-3)' : categoryColor(t.category?.name)">
                   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9z"/><circle cx="7.5" cy="7.5" r="1.4"/></svg>
                 </div>
                 <div>
@@ -199,7 +248,9 @@
             <td class="td">
               <div class="desc-cell">
                 <span class="desc-text">{{ t.description ?? '—' }}</span>
-                @if (t.isRecurring) {
+                @if (t.projected) {
+                  <span class="projected-badge">Prevista</span>
+                } @else if (t.isRecurring) {
                   <span class="recurring-badge" title="Ricorrente">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 2l3 3-3 3"/><path d="M3 11V9a4 4 0 0 1 4-4h13"/><path d="M7 22l-3-3 3-3"/><path d="M21 13v2a4 4 0 0 1-4 4H4"/></svg>
                   </span>
@@ -217,14 +268,16 @@
               {{ formatDate(t.date) }}
             </td>
             <!-- amount -->
-            <td class="td tnum amount-cell" [class]="amountClass(t.type)">
+            <td class="td tnum amount-cell" [class]="amountClass(t.type)" [class.amount-projected]="t.projected">
               {{ formatAmount(t.amount, t.type) }}
             </td>
             <!-- actions -->
             <td class="td" (click)="$event.stopPropagation()">
-              <button class="icon-btn" title="Modifica" (click)="openEdit(t)">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg>
-              </button>
+              @if (!t.id.includes('_proj_')) {
+                <button class="icon-btn" title="Modifica" (click)="openEdit(t)">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.4" fill="currentColor" stroke="none"/></svg>
+                </button>
+              }
             </td>
           </tr>
         }
@@ -239,30 +292,54 @@
           <div class="empty-sub">Prova a modificare i filtri o la ricerca.</div>
         </div>
       }
+
+      @if (totalPages() > 1) {
+        <div class="pagination">
+          <button class="page-btn" [disabled]="currentPage() === 1" (click)="prevPage()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          @for (p of pageNumbers(); track $index) {
+            @if (p === '...') {
+              <span class="page-ellipsis">…</span>
+            } @else {
+              <button class="page-btn" [class.page-btn--active]="currentPage() === p" (click)="goToPage(p)">{{ p }}</button>
+            }
+          }
+          <button class="page-btn" [disabled]="currentPage() === totalPages()" (click)="nextPage()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+          <span class="page-info">{{ (currentPage() - 1) * PAGE_SIZE + 1 }}–{{ currentPage() * PAGE_SIZE < filtered().length ? currentPage() * PAGE_SIZE : filtered().length }} di {{ filtered().length }}</span>
+        </div>
+      }
     }
   </div>
 
   <!-- MOBILE CARDS -->
   <div class="mobile-cards">
-    @for (t of filtered(); track t.id) {
-      <div class="mobile-card" (click)="openEdit(t)">
+    @for (t of pagedRows(); track t.id) {
+      <div class="mobile-card" [class.mobile-card--projected]="t.projected && t.id.includes('_proj_')" (click)="openEdit(t)">
         <div class="cat-icon cat-icon--md"
-          [style.background]="categorySoft(t.category?.name)"
-          [style.color]="categoryColor(t.category?.name)">
+          [style.background]="t.projected && t.id.includes('_proj_') ? 'var(--surface-2)' : categorySoft(t.category?.name)"
+          [style.color]="t.projected && t.id.includes('_proj_') ? 'var(--text-3)' : categoryColor(t.category?.name)">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9z"/><circle cx="7.5" cy="7.5" r="1.4"/></svg>
         </div>
         <div class="mobile-card-body">
-          <div class="mobile-card-title">{{ t.description ?? (t.category?.name ?? 'Transazione') }}</div>
+          <div class="mobile-card-title">
+            {{ t.description ?? (t.category?.name ?? 'Transazione') }}
+            @if (t.projected) {
+              <span class="projected-badge" style="margin-left: 6px">Prevista</span>
+            }
+          </div>
           <div class="mobile-card-meta">
             {{ t.category?.name ?? 'Nessuna categoria' }}
             @if (t.subCategory) { &middot; {{ t.subCategory.name }} }
-            @if (t.isRecurring) {
+            @if (!t.projected && t.isRecurring) {
               <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="color: var(--accent)"><path d="M17 2l3 3-3 3"/><path d="M3 11V9a4 4 0 0 1 4-4h13"/><path d="M7 22l-3-3 3-3"/><path d="M21 13v2a4 4 0 0 1-4 4H4"/></svg>
             }
           </div>
         </div>
         <div class="mobile-card-right">
-          <div class="tnum" [class]="amountClass(t.type)" style="font-size: 15px; font-weight: 700">
+          <div class="tnum" [class]="amountClass(t.type)" [class.amount-projected]="t.projected" style="font-size: 15px; font-weight: 700">
             {{ formatAmount(t.amount, t.type) }}
           </div>
           <div style="font-size: 12px; color: var(--text-faint)">{{ formatDate(t.date) }}</div>
@@ -275,7 +352,18 @@
           <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
         </div>
         <div class="empty-title">Nessuna transazione</div>
-        <div class="empty-sub">Modifica i filtri o aggiungi una transazione.</div>
+        <div class="empty-sub">Naviga tra i mesi o aggiungi una transazione.</div>
+      </div>
+    }
+    @if (totalPages() > 1) {
+      <div class="pagination pagination--mobile">
+        <button class="page-btn" [disabled]="currentPage() === 1" (click)="prevPage()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        </button>
+        <span class="page-info">{{ currentPage() }} / {{ totalPages() }}</span>
+        <button class="page-btn" [disabled]="currentPage() === totalPages()" (click)="nextPage()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+        </button>
       </div>
     }
   </div>
@@ -491,6 +579,56 @@
     <button class="btn btn-primary" [disabled]="formSubmitting()" (click)="saveTransaction()">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17 19 7"/></svg>
       {{ formSubmitting() ? 'Salvataggio…' : (editingTransaction() ? 'Salva modifiche' : 'Aggiungi') }}
+    </button>
+  </div>
+
+</app-modal>
+
+<!-- ======== OPENING BALANCE MODAL ======== -->
+<app-modal [open]="openingModalOpen()" [width]="420" (closed)="closeOpeningModal()">
+
+  <div class="modal-header">
+    <div class="modal-header-left">
+      <div class="modal-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="13" rx="2.5"/><path d="M2 10h20"/><circle cx="6" cy="15" r="1.2" fill="currentColor" stroke="none"/></svg>
+      </div>
+      <h2 class="modal-title">Saldo iniziale — {{ selectedMonthLabel() }}</h2>
+    </div>
+    <button class="icon-btn" (click)="closeOpeningModal()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+
+  <div class="modal-body">
+    <p class="ob-modal-desc">
+      Indica i soldi che avevi <b>all'inizio di {{ selectedMonthLabel() }}</b>. Da questo mese in poi il saldo verrà calcolato automaticamente aggiungendo entrate e sottraendo spese mese per mese.
+    </p>
+    <div class="amount-section">
+      <span class="amount-currency">€</span>
+      <input
+        class="amount-input tnum"
+        type="text"
+        inputmode="decimal"
+        placeholder="0,00"
+        [value]="openingAmount()"
+        (input)="openingAmount.set($any($event.target).value.replace(/[^0-9.,]/g, ''))"
+        autofocus
+      />
+    </div>
+    @if (openingError()) {
+      <div class="form-error">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>
+        {{ openingError() }}
+      </div>
+    }
+  </div>
+
+  <div class="modal-footer">
+    <div style="flex: 1"></div>
+    <button class="btn btn-ghost" (click)="closeOpeningModal()">Annulla</button>
+    <button class="btn btn-primary" [disabled]="openingSubmitting()" (click)="saveOpeningBalance()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17 19 7"/></svg>
+      {{ openingSubmitting() ? 'Salvataggio…' : 'Salva saldo' }}
     </button>
   </div>
 
