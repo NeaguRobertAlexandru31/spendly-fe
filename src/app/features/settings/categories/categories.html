@@ -1,10 +1,12 @@
 <!-- ── page header ─────────────────────────────────────────────────────── -->
-<div class="cat-page-header">
+<div class="flex justify-between items-end gap-[14px] flex-wrap mb-7">
   <div>
-    <div class="cat-page-title">Categorie</div>
-    <div class="cat-page-sub">Organizza le tue transazioni con categorie e sottocategorie.</div>
+    <div class="text-[18px] font-bold text-[var(--text)]">Categorie</div>
+    <div class="text-[13.5px] text-[var(--text-3)] mt-[3px]">Organizza le tue transazioni con categorie e sottocategorie.</div>
   </div>
-  <button class="btn btn-primary" (click)="openNewCat()">
+  <button
+    class="h-10 px-4 rounded-[var(--r-md)] text-[14px] font-semibold inline-flex items-center gap-[7px] border-0 cursor-pointer transition-[filter,transform] duration-150 whitespace-nowrap bg-[var(--accent)] text-white shadow-[var(--sh-accent)] active:scale-[0.975] disabled:opacity-55 disabled:cursor-not-allowed"
+    (click)="openNewCat()">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
     Nuova categoria
   </button>
@@ -12,72 +14,78 @@
 
 <!-- ── loading / error ────────────────────────────────────────────────────── -->
 @if (loading()) {
-  <div class="page-feedback">
+  <div class="flex items-center gap-[10px] p-[18px_20px] rounded-[var(--r-lg)] bg-[var(--surface-2)] text-[var(--text-3)] text-[14px] font-medium">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 1s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
     Caricamento…
   </div>
 } @else if (pageError()) {
-  <div class="page-feedback page-feedback--error">
+  <div class="flex items-center gap-[10px] p-[18px_20px] rounded-[var(--r-lg)] bg-[var(--neg-soft)] text-[var(--neg)] text-[14px] font-medium">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>
     {{ pageError() }}
   </div>
 } @else if (grouped().length === 0) {
-  <div class="empty-state">
-    <div class="empty-icon">
+  <div class="text-center py-14 px-5 text-[var(--text-3)]">
+    <div class="w-14 h-14 rounded-[var(--r-lg)] bg-[var(--surface-2)] border border-[var(--border)] grid place-items-center mx-auto mb-[14px] text-[var(--text-faint)]">
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9z"/><circle cx="7.5" cy="7.5" r="1.4"/></svg>
     </div>
-    <div class="empty-title">Nessuna categoria</div>
-    <div class="empty-sub">Crea la prima categoria per iniziare a organizzare le transazioni.</div>
-    <button class="btn btn-primary" style="margin-top: 18px" (click)="openNewCat()">
+    <div class="font-bold text-[var(--text-2)] text-[15.5px]">Nessuna categoria</div>
+    <div class="text-[13.5px] mt-1">Crea la prima categoria per iniziare a organizzare le transazioni.</div>
+    <button
+      class="h-10 px-4 rounded-[var(--r-md)] text-[14px] font-semibold inline-flex items-center gap-[7px] border-0 cursor-pointer transition-[filter,transform] duration-150 whitespace-nowrap bg-[var(--accent)] text-white shadow-[var(--sh-accent)] active:scale-[0.975] mt-[18px]"
+      (click)="openNewCat()">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
       Nuova categoria
     </button>
   </div>
 } @else {
   <!-- ── grouped list ──────────────────────────────────────────────────── -->
-  <div class="cat-groups">
+  <div class="flex flex-col gap-8">
     @for (group of grouped(); track group.type) {
-      <div class="cat-group">
+      <div class="flex flex-col gap-3">
 
         <!-- group heading -->
-        <div class="group-heading">
-          <span class="type-pill" [style.background]="group.pill.bg" [style.color]="group.pill.fg">
+        <div class="flex items-center gap-[10px]">
+          <span
+            class="inline-flex items-center h-6 px-[10px] rounded-[var(--r-pill)] text-[12px] font-bold tracking-[0.01em]"
+            [style.background]="group.pill.bg" [style.color]="group.pill.fg">
             {{ group.label }}
           </span>
-          <span class="group-count">{{ group.items.length }} {{ group.items.length === 1 ? 'categoria' : 'categorie' }}</span>
+          <span class="text-[13px] text-[var(--text-3)] font-medium">{{ group.items.length }} {{ group.items.length === 1 ? 'categoria' : 'categorie' }}</span>
         </div>
 
         <!-- category cards -->
-        <div class="cat-cards">
+        <div class="grid gap-[14px]" style="grid-template-columns: repeat(auto-fill, minmax(300px, 1fr))">
           @for (cat of group.items; track cat.id) {
-            <div class="cat-card">
+            <div class="bg-[var(--surface)] border border-[var(--border)] rounded-[var(--r-lg)] shadow-[var(--sh-sm)] overflow-hidden">
 
               <!-- card header -->
-              <div class="cat-card-header">
-                <div class="cat-card-left">
-                  <div class="cat-badge"
+              <div class="flex items-center justify-between p-[14px_16px] border-b border-[var(--border)]">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-[var(--r-sm)] grid place-items-center shrink-0"
                     [style.background]="catSoft(cat.name)"
                     [style.color]="catColor(cat.name)">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12V4a1 1 0 0 1 1-1h8l9 9-9 9z"/><circle cx="7.5" cy="7.5" r="1.4"/></svg>
                   </div>
                   <div>
-                    <div class="cat-card-name">{{ cat.name }}</div>
-                    <div class="cat-card-meta">{{ cat.subCategories.length }} sottocategor{{ cat.subCategories.length === 1 ? 'ia' : 'ie' }}</div>
+                    <div class="text-[15px] font-bold text-[var(--text)]">{{ cat.name }}</div>
+                    <div class="text-[12px] text-[var(--text-3)] mt-[1px]">{{ cat.subCategories.length }} sottocategor{{ cat.subCategories.length === 1 ? 'ia' : 'ie' }}</div>
                   </div>
                 </div>
-                <button class="icon-btn" title="Modifica categoria" (click)="openEditCat(cat)">
+                <button
+                  class="w-[30px] h-[30px] rounded-[var(--r-sm)] border border-[var(--border)] bg-[var(--surface)] text-[var(--text-2)] grid place-items-center cursor-pointer transition-all duration-150 shrink-0 hover:bg-[var(--surface-2)] hover:border-[var(--border-strong)] disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="Modifica categoria" (click)="openEditCat(cat)">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L18.5 9.5a2 2 0 0 0-3-3L5 17v3zM14 7l3 3"/></svg>
                 </button>
               </div>
 
               <!-- subcategory list -->
-              <div class="sub-list">
+              <div class="px-[14px] pt-[10px] pb-3 flex flex-col gap-1">
                 @for (sub of cat.subCategories; track sub.id) {
-                  <div class="sub-row">
+                  <div class="flex items-center gap-2 min-h-[34px] rounded-[var(--r-sm)] px-1 transition-[background] duration-100 hover:bg-[var(--surface-2)] group">
                     @if (isEditingSub(sub.id)) {
                       <!-- rename inline -->
                       <input
-                        class="sub-input"
+                        class="flex-1 h-[30px] px-[10px] rounded-[var(--r-sm)] border-[1.5px] border-[var(--accent)] bg-[var(--surface)] text-[var(--text)] text-[13.5px] font-medium outline-none shadow-[0_0_0_3px_var(--accent-ring)]"
                         type="text"
                         [value]="subEditValue()"
                         (input)="setSubEditValue($any($event.target).value)"
@@ -85,29 +93,41 @@
                         [disabled]="subEditSaving()"
                         autofocus
                       />
-                      <div class="sub-row-actions">
-                        <button class="icon-btn icon-btn--accent" title="Salva" [disabled]="subEditSaving()" (click)="saveEditSub(cat)">
+                      <div class="flex gap-1 shrink-0">
+                        <button
+                          class="w-[30px] h-[30px] rounded-[var(--r-sm)] border-0 bg-[var(--accent-soft)] text-[var(--accent-700)] grid place-items-center cursor-pointer transition-all duration-150 shrink-0 hover:bg-[var(--accent-soft-2)] disabled:opacity-50 disabled:cursor-not-allowed"
+                          title="Salva" [disabled]="subEditSaving()" (click)="saveEditSub(cat)">
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17 19 7"/></svg>
                         </button>
-                        <button class="icon-btn" title="Annulla" (click)="cancelEditSub()">
+                        <button
+                          class="w-[30px] h-[30px] rounded-[var(--r-sm)] border border-[var(--border)] bg-[var(--surface)] text-[var(--text-2)] grid place-items-center cursor-pointer transition-all duration-150 shrink-0 hover:bg-[var(--surface-2)] hover:border-[var(--border-strong)]"
+                          title="Annulla" (click)="cancelEditSub()">
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
                         </button>
                       </div>
                     } @else if (isDeletingSub(sub.id)) {
                       <!-- delete confirm -->
-                      <span class="sub-delete-label">Elimina "{{ sub.name }}"?</span>
-                      <div class="sub-row-actions">
-                        <button class="btn-danger-sm" (click)="confirmDeleteSub(cat, sub.id)">Sì</button>
-                        <button class="btn-ghost-sm" (click)="cancelDeleteSub()">No</button>
+                      <span class="flex-1 text-[13px] font-semibold text-[var(--neg)] px-1">Elimina "{{ sub.name }}"?</span>
+                      <div class="flex gap-1 shrink-0">
+                        <button
+                          class="h-7 px-3 rounded-[var(--r-sm)] border-0 bg-[var(--neg)] text-white text-[12.5px] font-bold cursor-pointer"
+                          (click)="confirmDeleteSub(cat, sub.id)">Sì</button>
+                        <button
+                          class="h-7 px-[10px] rounded-[var(--r-sm)] border border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text-2)] text-[12.5px] font-semibold cursor-pointer"
+                          (click)="cancelDeleteSub()">No</button>
                       </div>
                     } @else {
                       <!-- normal row -->
-                      <span class="sub-chip">{{ sub.name }}</span>
-                      <div class="sub-row-actions sub-row-actions--hover">
-                        <button class="icon-btn icon-btn--sm" title="Rinomina" (click)="startEditSub(sub)">
+                      <span class="flex-1 text-[13.5px] font-medium text-[var(--text-2)] px-1">{{ sub.name }}</span>
+                      <div class="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                        <button
+                          class="w-[26px] h-[26px] rounded-[var(--r-sm)] border border-[var(--border)] bg-[var(--surface)] text-[var(--text-2)] grid place-items-center cursor-pointer transition-all duration-150 shrink-0 hover:bg-[var(--surface-2)] hover:border-[var(--border-strong)]"
+                          title="Rinomina" (click)="startEditSub(sub)">
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L18.5 9.5a2 2 0 0 0-3-3L5 17v3zM14 7l3 3"/></svg>
                         </button>
-                        <button class="icon-btn icon-btn--sm icon-btn--danger" title="Elimina" (click)="askDeleteSub(sub.id)">
+                        <button
+                          class="w-[26px] h-[26px] rounded-[var(--r-sm)] border border-[var(--border)] bg-[var(--surface)] text-[var(--neg)] grid place-items-center cursor-pointer transition-all duration-150 shrink-0 hover:bg-[var(--neg-soft)] hover:border-transparent"
+                          title="Elimina" (click)="askDeleteSub(sub.id)">
                           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"/></svg>
                         </button>
                       </div>
@@ -116,9 +136,9 @@
                 }
 
                 <!-- add sub input -->
-                <div class="sub-add-row">
+                <div class="flex items-center gap-[6px] mt-[6px] pt-2 border-t border-dashed border-[var(--border)]">
                   <input
-                    class="sub-add-input"
+                    class="flex-1 h-8 px-[10px] rounded-[var(--r-sm)] border border-transparent bg-transparent text-[var(--text)] text-[13px] font-medium outline-none transition-[border,background] duration-150 placeholder:text-[var(--text-faint)] focus:border-[var(--border-strong)] focus:bg-[var(--surface-2)]"
                     type="text"
                     placeholder="+ Aggiungi sottocategoria…"
                     [value]="getNewSubName(cat.id)"
@@ -128,7 +148,7 @@
                   />
                   @if (getNewSubName(cat.id).trim()) {
                     <button
-                      class="icon-btn icon-btn--accent"
+                      class="w-[30px] h-[30px] rounded-[var(--r-sm)] border-0 bg-[var(--accent-soft)] text-[var(--accent-700)] grid place-items-center cursor-pointer transition-all duration-150 shrink-0 hover:bg-[var(--accent-soft-2)] disabled:opacity-50 disabled:cursor-not-allowed"
                       title="Aggiungi"
                       [disabled]="isNewSubSaving(cat.id)"
                       (click)="addSub(cat)"
@@ -152,30 +172,32 @@
 <app-modal [open]="catModalOpen()" [width]="460" (closed)="closeCatModal()">
 
   <!-- header -->
-  <div class="modal-header">
-    <div class="modal-header-left">
-      <div class="modal-icon">
+  <div class="flex items-center justify-between p-[18px_22px_14px] border-b border-[var(--border)] shrink-0">
+    <div class="flex items-center gap-[11px]">
+      <div class="w-[34px] h-[34px] rounded-[var(--r-sm)] bg-[var(--accent-soft)] text-[var(--accent-700)] grid place-items-center shrink-0">
         @if (catModalEditing()) {
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L18.5 9.5a2 2 0 0 0-3-3L5 17v3zM14 7l3 3"/></svg>
         } @else {
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
         }
       </div>
-      <h2 class="modal-title">{{ catModalEditing() ? 'Modifica categoria' : 'Nuova categoria' }}</h2>
+      <h2 class="m-0 text-[17px] font-bold text-[var(--text)]">{{ catModalEditing() ? 'Modifica categoria' : 'Nuova categoria' }}</h2>
     </div>
-    <button class="icon-btn" (click)="closeCatModal()">
+    <button
+      class="w-[30px] h-[30px] rounded-[var(--r-sm)] border border-[var(--border)] bg-[var(--surface)] text-[var(--text-2)] grid place-items-center cursor-pointer transition-all duration-150 shrink-0 hover:bg-[var(--surface-2)] hover:border-[var(--border-strong)]"
+      (click)="closeCatModal()">
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
     </button>
   </div>
 
   <!-- body -->
-  <div class="modal-body">
+  <div class="overflow-y-auto p-[20px_22px] flex flex-col gap-[18px]">
 
     <!-- name -->
-    <div class="field">
-      <div class="field-label">Nome</div>
+    <div class="flex flex-col gap-[7px]">
+      <div class="text-[13px] font-semibold text-[var(--text-2)]">Nome</div>
       <input
-        class="text-input"
+        class="w-full h-[46px] px-[14px] rounded-[var(--r-md)] border border-[var(--border-strong)] bg-[var(--surface)] text-[var(--text)] text-[14.5px] font-medium outline-none transition-[border,box-shadow] duration-150 focus:border-[var(--accent)] focus:shadow-[0_0_0_3px_var(--accent-ring)] disabled:opacity-60"
         type="text"
         placeholder="Es. Cibo, Stipendio, Affitto…"
         [value]="catName()"
@@ -185,23 +207,22 @@
     </div>
 
     <!-- type -->
-    <div class="field">
-      <div class="field-label">Tipo di transazione</div>
-      <div class="type-grid">
+    <div class="flex flex-col gap-[7px]">
+      <div class="text-[13px] font-semibold text-[var(--text-2)]">Tipo di transazione</div>
+      <div class="grid grid-cols-2 gap-[10px]">
         @for (type of typeOptions; track type) {
           <button
-            class="type-option"
-            [class.type-option--active]="catType() === type"
+            class="flex flex-col gap-[2px] p-[12px_14px] rounded-[var(--r-md)] border-[1.5px] bg-[var(--surface)] text-left cursor-pointer transition-all duration-150 hover:bg-[var(--surface-2)] disabled:opacity-50 disabled:cursor-not-allowed"
             [style.border-color]="catType() === type ? typePillFg(type) : 'var(--border)'"
             [style.background]="catType() === type ? typePillBg(type) : 'var(--surface)'"
             (click)="catType.set(type)"
             [disabled]="catSaving()"
           >
-            <span class="type-option-label"
+            <span class="text-[14px] font-bold"
               [style.color]="catType() === type ? typePillFg(type) : 'var(--text-2)'">
               {{ typeLabels[type] }}
             </span>
-            <span class="type-option-hint"
+            <span class="text-[12px] font-normal"
               [style.color]="catType() === type ? typePillFg(type) : 'var(--text-3)'">
               {{ type === 'EXPENSE' ? 'Uscite normali' : type === 'INCOME' ? 'Entrate attive' : type === 'DEBIT' ? 'Addebiti bancari' : 'Rimborsi/crediti' }}
             </span>
@@ -209,15 +230,15 @@
         }
       </div>
       @if (catModalEditing() && catModalEditing()!.type !== catType()) {
-        <div class="field-warn">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.3 2 20h20L13.7 3.3a2 2 0 0 0-3.4 0z"/><path d="M12 10v4M12 18h.01"/></svg>
+        <div class="flex items-start gap-2 p-[10px_12px] rounded-[var(--r-md)] bg-[var(--warn-soft)] text-[var(--warn)] text-[12.5px] font-medium leading-[1.4]">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 mt-[1px]"><path d="M10.3 3.3 2 20h20L13.7 3.3a2 2 0 0 0-3.4 0z"/><path d="M12 10v4M12 18h.01"/></svg>
           Cambiare tipo non invalida le transazioni esistenti, ma le sottocategorie potrebbero non essere più compatibili.
         </div>
       }
     </div>
 
     @if (catError()) {
-      <div class="form-error">
+      <div class="flex items-center gap-2 p-[10px_14px] rounded-[var(--r-md)] bg-[var(--neg-soft)] text-[var(--neg)] text-[13.5px] font-semibold">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v4M12 16h.01"/></svg>
         {{ catError() }}
       </div>
@@ -226,26 +247,36 @@
   </div>
 
   <!-- footer -->
-  <div class="modal-footer">
+  <div class="flex items-center gap-[10px] p-[14px_22px] border-t border-[var(--border)] bg-[var(--surface)] shrink-0 max-[600px]:flex-col-reverse max-[600px]:items-stretch max-[600px]:px-4 max-[600px]:py-3 max-[600px]:[padding-bottom:max(12px,env(safe-area-inset-bottom))] max-[600px]:gap-2">
     @if (catModalEditing()) {
       @if (!catDeleteConfirm()) {
-        <button class="btn btn-danger" [disabled]="catSaving()" (click)="confirmDeleteCat()">
+        <button
+          class="h-10 px-4 rounded-[var(--r-md)] text-[14px] font-semibold inline-flex items-center gap-[7px] border-0 cursor-pointer transition-[filter,transform] duration-150 whitespace-nowrap bg-[var(--neg-soft)] text-[var(--neg)] active:scale-[0.975] disabled:opacity-55 disabled:cursor-not-allowed"
+          [disabled]="catSaving()" (click)="confirmDeleteCat()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"/></svg>
           Elimina
         </button>
       } @else {
-        <div class="delete-confirm">
-          <span class="delete-confirm-text">Elimina anche tutte le sottocategorie?</span>
-          <button class="btn-danger-solid" [disabled]="catSaving()" (click)="deleteCat()">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="text-[13px] font-semibold text-[var(--neg)]">Elimina anche tutte le sottocategorie?</span>
+          <button
+            class="h-[34px] px-[14px] rounded-[var(--r-sm)] border-0 bg-[var(--neg)] text-white text-[13px] font-semibold cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            [disabled]="catSaving()" (click)="deleteCat()">
             {{ catSaving() ? '…' : 'Sì, elimina' }}
           </button>
-          <button class="btn btn-ghost" (click)="cancelDeleteCat()">No</button>
+          <button
+            class="h-10 px-4 rounded-[var(--r-md)] text-[14px] font-semibold inline-flex items-center gap-[7px] border border-transparent cursor-pointer transition-[filter,transform] duration-150 whitespace-nowrap bg-transparent text-[var(--text-2)] active:scale-[0.975]"
+            (click)="cancelDeleteCat()">No</button>
         </div>
       }
     }
-    <div style="flex: 1"></div>
-    <button class="btn btn-ghost" (click)="closeCatModal()">Annulla</button>
-    <button class="btn btn-primary" [disabled]="catSaving()" (click)="saveCat()">
+    <div class="flex-1"></div>
+    <button
+      class="h-10 px-4 rounded-[var(--r-md)] text-[14px] font-semibold inline-flex items-center gap-[7px] border border-transparent cursor-pointer transition-[filter,transform] duration-150 whitespace-nowrap bg-transparent text-[var(--text-2)] active:scale-[0.975]"
+      (click)="closeCatModal()">Annulla</button>
+    <button
+      class="h-10 px-4 rounded-[var(--r-md)] text-[14px] font-semibold inline-flex items-center gap-[7px] border-0 cursor-pointer transition-[filter,transform] duration-150 whitespace-nowrap bg-[var(--accent)] text-white shadow-[var(--sh-accent)] active:scale-[0.975] disabled:opacity-55 disabled:cursor-not-allowed"
+      [disabled]="catSaving()" (click)="saveCat()">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5 10 17 19 7"/></svg>
       {{ catSaving() ? 'Salvataggio…' : (catModalEditing() ? 'Salva' : 'Crea categoria') }}
     </button>

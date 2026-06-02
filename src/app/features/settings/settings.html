@@ -1,20 +1,20 @@
-<div class="settings-wrap">
+<div class="flex flex-col px-8 pt-7 pb-10 max-w-[900px] mx-auto gap-0 max-sm:px-4 max-sm:pt-[18px] max-sm:pb-8">
 
-  <div class="settings-header">
-    <h1 class="settings-title">Impostazioni</h1>
+  <div class="mb-6">
+    <h1 class="text-[27px] font-extrabold tracking-[-0.02em] m-0 text-[var(--text)]">Impostazioni</h1>
   </div>
 
-  <div class="settings-tabs">
+  <div class="flex gap-[2px] border-b border-[var(--border)] mb-7">
     @for (tab of tabs; track tab.route) {
       <a
-        class="settings-tab"
+        class="h-[42px] px-[18px] text-[14px] font-semibold text-[var(--text-3)] no-underline inline-flex items-center border-b-2 border-transparent -mb-px transition-[color,border-color] duration-150 hover:text-[var(--text-2)]"
         [routerLink]="tab.route"
-        routerLinkActive="settings-tab--active"
+        routerLinkActive="!text-[var(--accent-700)] !border-[var(--accent)]"
       >{{ tab.label }}</a>
     }
   </div>
 
-  <div class="settings-content">
+  <div class="w-full">
     <router-outlet />
   </div>
 
