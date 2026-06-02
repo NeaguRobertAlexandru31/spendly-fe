@@ -1,6 +1,14 @@
 <div class="flex min-h-screen bg-[var(--bg)]">
   <app-sidebar class="max-md:hidden" />
-  <main class="flex-1 min-w-0 overflow-y-auto">
-    <router-outlet />
+  <main class="flex-1 min-w-0 overflow-y-auto md:pb-0 pb-28"
+    style="padding-top: env(safe-area-inset-top)">
+    <div class="h-full" [@routeAnim]="outlet.isActivated ? outlet.activatedRoute : ''">
+      <router-outlet #outlet="outlet"/>
+    </div>
   </main>
+</div>
+
+<!-- bottom bar floating — solo mobile -->
+<div class="md:hidden">
+  <app-bottom-bar />
 </div>

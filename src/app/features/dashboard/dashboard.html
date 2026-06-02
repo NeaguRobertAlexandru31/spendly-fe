@@ -5,38 +5,120 @@
   </div>
 } @else {
 
-<div class="flex flex-col gap-[22px] p-6 max-w-[1200px] mx-auto w-full">
+<div class="flex flex-col gap-4 px-4 pt-4 pb-6 md:gap-[22px] md:p-6 max-w-[1200px] mx-auto w-full">
 
   <!-- header -->
-  <div class="flex justify-between items-end flex-wrap gap-3">
+  <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
     <div>
-      <div class="text-[14px] font-semibold capitalize" style="color:var(--text-3)">{{ monthName() }}</div>
-      <h1 class="text-[27px] font-extrabold tracking-tight mt-0.5" style="color:var(--text)">Dashboard 👋</h1>
+      <div class="text-[13px] font-semibold capitalize" style="color:var(--text-3)">{{ monthName() }}</div>
+      <h1 class="text-[24px] md:text-[27px] font-extrabold tracking-tight mt-0.5 leading-none" style="color:var(--text)">Dashboard</h1>
     </div>
     <a routerLink="/transactions"
-      class="inline-flex items-center gap-2 h-11 px-[17px] rounded-[var(--r-md)] text-[14.5px] font-semibold text-white no-underline transition-[filter] hover:brightness-110"
+      class="inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-[var(--r-md)] text-[13.5px] font-semibold text-white no-underline transition-[filter] hover:brightness-110 max-sm:w-full max-sm:h-[46px] max-sm:text-[15px] max-sm:mt-1"
       style="background:var(--accent);box-shadow:var(--sh-accent)">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 5v14M5 12h14"/>
       </svg>
       Aggiungi transazione
     </a>
   </div>
 
-  <!-- stat tiles -->
-  <div class="grid grid-cols-3 gap-3.5 max-[900px]:grid-cols-2 max-[600px]:grid-cols-1">
+  <!-- filtri -->
+  <div class="flex flex-col gap-2 p-3 rounded-[var(--r-lg)]" style="background:var(--surface);border:1px solid var(--border)">
+
+    <!-- riga 1: mese + reset -->
+    <div class="flex items-center gap-2">
+      <div class="flex items-center gap-1 h-9 rounded-[var(--r-md)] px-1 flex-1" style="background:var(--surface-2)">
+        <button (click)="prevMonth()"
+          class="w-8 h-7 flex items-center justify-center rounded-[var(--r-sm)] transition-colors hover:bg-[var(--border)]"
+          style="color:var(--text-3)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <span class="text-[13.5px] font-semibold px-1 capitalize flex-1 text-center" style="color:var(--text)">{{ monthName() }}</span>
+        <button (click)="nextMonth()" [disabled]="isCurrentMonth()"
+          class="w-8 h-7 flex items-center justify-center rounded-[var(--r-sm)] transition-colors hover:bg-[var(--border)] disabled:opacity-30 disabled:cursor-not-allowed"
+          style="color:var(--text-3)">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </button>
+      </div>
+      <button (click)="resetFilters()"
+        class="h-9 px-3 text-[13px] font-medium rounded-[var(--r-md)] transition-colors hover:bg-[var(--surface-2)] shrink-0"
+        style="color:var(--text-3);border:1px solid var(--border)">
+        Reset
+      </button>
+    </div>
+
+    <!-- riga 2: categoria + tipo + confronto -->
+    <div class="grid grid-cols-2 gap-2 md:flex md:flex-wrap">
+      <select [(ngModel)]="selectedCategoryId" (change)="applyFilter()"
+        class="h-9 px-3 text-[13px] rounded-[var(--r-md)] appearance-none outline-none cursor-pointer w-full"
+        style="background:var(--surface-2);border:1px solid var(--border);color:var(--text)">
+        <option value="">Tutte le categorie</option>
+        @for (cat of categories(); track cat.id) {
+          <option [value]="cat.id">{{ cat.name }}</option>
+        }
+      </select>
+
+      <select [(ngModel)]="selectedType" (change)="applyFilter()"
+        class="h-9 px-3 text-[13px] rounded-[var(--r-md)] appearance-none outline-none cursor-pointer w-full"
+        style="background:var(--surface-2);border:1px solid var(--border);color:var(--text)">
+        <option value="ALL">Entrate & Uscite</option>
+        <option value="EXPENSE">Solo uscite</option>
+        <option value="INCOME">Solo entrate</option>
+      </select>
+
+      <select [(ngModel)]="selectedCompare" (change)="applyFilter()"
+        class="h-9 px-3 text-[13px] rounded-[var(--r-md)] appearance-none outline-none cursor-pointer w-full col-span-2 md:col-span-1"
+        style="background:var(--surface-2);border:1px solid var(--border);color:var(--text)">
+        <option value="">Nessun confronto</option>
+        <option value="previous">vs mese precedente</option>
+        <option value="year">vs stesso mese anno scorso</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- comparison banner -->
+  @if (comparison(); as cmp) {
+    <div class="flex flex-wrap items-center gap-3 px-4 py-3 rounded-[var(--r-lg)]"
+      style="background:var(--surface);border:1px solid var(--border)">
+      <span class="text-[13px]" style="color:var(--text-3)">Confronto con <strong style="color:var(--text)">{{ cmp.label }}</strong></span>
+      <div class="flex items-center gap-1.5 text-[13.5px] font-semibold" [class]="deltaClass(cmp.deltaSpentPct)">
+        {{ deltaArrow(cmp.deltaSpentPct) }} Uscite: {{ fmtDelta(cmp) }}
+      </div>
+      @if (cmp.deltaIncomePct !== null) {
+        <div class="flex items-center gap-1.5 text-[13.5px] font-medium" style="color:var(--text-3)">
+          Entrate prec.: {{ eur(cmp.totalIncome) }}
+        </div>
+      }
+    </div>
+  }
+
+  <!-- stat tiles: 2×2 su mobile, 4×1 su desktop -->
+  <div class="grid grid-cols-2 gap-3 md:grid-cols-4 md:gap-3.5">
     <app-card-metric
       [label]="'Speso questo mese'"
       [value]="totalSpent()"
       [iconPath]="ICON_WALLET"
-      [tone]="'accent'"/>
+      [tone]="'accent'"
+      [trendPct]="spentTrendPct()"
+      [trendPositive]="false"
+      [subText]="compareLabel()"/>
+
+    <app-card-metric
+      [label]="'Entrate questo mese'"
+      [value]="totalIncome()"
+      [iconPath]="ICON_TRENDING"
+      [tone]="'pos'"
+      [trendPct]="incomeTrendPct()"
+      [trendPositive]="true"
+      [subText]="compareLabel()"/>
 
     <app-card-metric
       [label]="'Media giornaliera'"
       [value]="dailyAvg()"
       [iconPath]="ICON_CALENDAR"
       [tone]="'neutral'"
-      [subText]="'Proiezione mese '"
+      [subText]="'Proiezione fine mese '"
       [subValue]="projected()"/>
 
     <app-card-metric
@@ -47,15 +129,22 @@
       [subText]="recurringCount() + ' abbonamenti attivi'"/>
   </div>
 
+  <!-- bilancio netto -->
+  <div class="flex items-center justify-between px-4 py-3 rounded-[var(--r-lg)]"
+    style="background:var(--surface);border:1px solid var(--border)">
+    <span class="text-[14px] font-medium" style="color:var(--text-3)">Bilancio netto</span>
+    <span class="tnum text-[18px] font-extrabold" [style.color]="netBalanceColor()">{{ netBalanceLabel() }}</span>
+  </div>
+
   <!-- main grid -->
-  <div class="grid grid-cols-[1.4fr_1fr] gap-3.5 max-[900px]:grid-cols-1">
+  <div class="grid grid-cols-1 gap-3 md:grid-cols-[1.4fr_1fr] md:gap-3.5">
 
     <!-- area chart -->
-    <div class="p-[22px]" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-sm)">
+    <div class="p-4 md:p-[22px]" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-sm)">
       <div class="flex justify-between items-start mb-2">
         <div>
-          <h3 class="m-0 text-[16px] font-bold" style="color:var(--text)">Andamento del mese</h3>
-          <p class="mt-1 mb-0 text-[13px]" style="color:var(--text-3)">Spesa cumulativa giorno per giorno</p>
+          <h3 class="m-0 text-[15px] md:text-[16px] font-bold" style="color:var(--text)">Andamento del mese</h3>
+          <p class="mt-1 mb-0 text-[12.5px] md:text-[13px]" style="color:var(--text-3)">Spesa cumulativa giorno per giorno</p>
         </div>
       </div>
 
@@ -82,29 +171,27 @@
     </div>
 
     <!-- category breakdown -->
-    <div class="p-[22px]" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-sm)">
+    <div class="p-4 md:p-[22px]" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-sm)">
       <div class="flex justify-between items-center mb-4">
-        <h3 class="m-0 text-[16px] font-bold" style="color:var(--text)">Spese per categoria</h3>
+        <h3 class="m-0 text-[15px] md:text-[16px] font-bold" style="color:var(--text)">Spese per categoria</h3>
         <a routerLink="/transactions" class="text-[13px] font-semibold no-underline hover:underline" style="color:var(--accent-700)">Tutte</a>
       </div>
 
       @if (topCategories().length) {
-        <!-- stacked bar -->
         <div class="flex h-3 rounded-full overflow-hidden gap-0.5 mb-4">
           @for (seg of catBarSegs(topCategories()); track $index) {
             <div class="min-w-[3px] rounded-full" [style.flex]="seg.flex" [style.background]="seg.color"></div>
           }
         </div>
-
         <div class="flex flex-col gap-0.5">
           @for (cat of topCategories(); track cat.categoryId) {
             <div class="flex items-center gap-3 px-2 py-[9px] rounded-[var(--r-sm)] transition-colors hover:bg-[var(--surface-2)]">
               <app-category-badge [name]="cat.categoryName" size="sm"/>
               <div class="flex-1 min-w-0">
-                <div class="text-[14px] font-semibold" style="color:var(--text)">{{ cat.categoryName ?? 'Altro' }}</div>
-                <div class="text-[12.5px]" style="color:var(--text-3)">{{ catPct(cat) }}% del totale</div>
+                <div class="text-[13.5px] md:text-[14px] font-semibold" style="color:var(--text)">{{ cat.categoryName ?? 'Altro' }}</div>
+                <div class="text-[12px] md:text-[12.5px]" style="color:var(--text-3)">{{ catPct(cat) }}% del totale</div>
               </div>
-              <div class="tnum text-[14.5px] font-bold" style="color:var(--text)">{{ eur(cat.total) }}</div>
+              <div class="tnum text-[14px] md:text-[14.5px] font-bold" style="color:var(--text)">{{ eur(cat.total) }}</div>
             </div>
           }
         </div>
@@ -114,9 +201,9 @@
     </div>
 
     <!-- recent transactions -->
-    <div class="p-[22px] col-span-full max-[900px]:col-span-1" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-sm)">
+    <div class="p-4 md:p-[22px] md:col-span-2" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--sh-sm)">
       <div class="flex justify-between items-center mb-3.5">
-        <h3 class="m-0 text-[16px] font-bold" style="color:var(--text)">Transazioni recenti</h3>
+        <h3 class="m-0 text-[15px] md:text-[16px] font-bold" style="color:var(--text)">Transazioni recenti</h3>
         <a routerLink="/transactions" class="text-[13px] font-semibold no-underline hover:underline" style="color:var(--accent-700)">Vedi tutte</a>
       </div>
 
@@ -126,10 +213,10 @@
             <div class="flex items-center gap-3.5 py-[11px]" [style.border-top]="first ? 'none' : '1px solid var(--border)'">
               <app-category-badge [name]="tx.category?.name ?? null"/>
               <div class="flex-1 min-w-0">
-                <div class="text-[14px] font-semibold truncate" style="color:var(--text)">
+                <div class="text-[13.5px] md:text-[14px] font-semibold truncate" style="color:var(--text)">
                   {{ tx.description ?? typeLabel(tx.type) }}
                 </div>
-                <div class="flex items-center gap-1.5 text-[12.5px]" style="color:var(--text-3)">
+                <div class="flex items-center gap-1.5 text-[12px] md:text-[12.5px]" style="color:var(--text-3)">
                   {{ tx.category?.name ?? 'Senza categoria' }}
                   @if (tx.isRecurring) {
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--accent)"
@@ -140,7 +227,7 @@
                 </div>
               </div>
               <div class="text-right">
-                <div class="tnum text-[14.5px] font-bold" [style.color]="txColor(tx)">
+                <div class="tnum text-[14px] md:text-[14.5px] font-bold" [style.color]="txColor(tx)">
                   {{ txSign(tx) }}{{ eur(tx.amount) }}
                 </div>
                 <div class="text-[12px]" style="color:var(--text-faint)">{{ fmtDate(tx.date) }}</div>
@@ -149,7 +236,7 @@
           }
         </div>
       } @else {
-        <p class="text-[13.5px] text-center py-6" style="color:var(--text-3)">Nessuna transazione questo mese</p>
+        <p class="text-[13.5px] text-center py-6" style="color:var(--text-3)">Nessuna transazione in questo periodo</p>
       }
     </div>
 

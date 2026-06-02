@@ -1,0 +1,56 @@
+<!-- floating bottom bar — solo mobile (reso visibile/nascosto dallo shell con md:hidden) -->
+<div
+  class="fixed bottom-4 left-4 right-4 z-50 will-change-transform transition-[transform,opacity] duration-300 ease-in-out"
+  style="bottom: max(1rem, calc(env(safe-area-inset-bottom) + 0.5rem))"
+  [style.transform]="visible()
+    ? 'translateY(0)'
+    : 'translateY(calc(100% + 24px))'"
+  [style.opacity]="visible() ? '1' : '0'"
+  [style.pointerEvents]="visible() ? 'auto' : 'none'">
+
+  <nav class="flex items-center justify-around w-full px-2 py-2 rounded-[26px]"
+    style="
+      background: rgba(255,255,255,0.55);
+      backdrop-filter: saturate(180%) blur(28px);
+      -webkit-backdrop-filter: saturate(180%) blur(28px);
+      border: 1px solid rgba(255,255,255,0.72);
+      box-shadow:
+        0 8px 32px rgba(0,0,0,0.12),
+        0 2px 8px rgba(0,0,0,0.07),
+        inset 0 1px 0 rgba(255,255,255,0.9);
+    ">
+
+    @for (item of nav; track item.route) {
+      <a #rla="routerLinkActive"
+        [routerLink]="item.route"
+        routerLinkActive
+        class="relative flex flex-col items-center justify-center flex-1 h-[52px] rounded-[18px] no-underline transition-all duration-200 active:scale-95"
+        [style.background]="rla.isActive ? 'rgba(107,79,216,0.10)' : 'transparent'">
+
+        <lucide-angular
+          [img]="item.icon"
+          [size]="22"
+          [style.color]="rla.isActive ? 'var(--accent)' : 'rgba(60,60,67,0.55)'"
+          class="transition-colors duration-200"/>
+
+        <span class="mt-0.5 text-[10px] font-semibold leading-none transition-colors duration-200"
+          [style.color]="rla.isActive ? 'var(--accent)' : 'rgba(60,60,67,0.45)'">
+          {{ item.label }}
+        </span>
+
+      </a>
+    }
+
+    <!-- separatore -->
+    <div class="w-px h-7 mx-1 rounded-full shrink-0" style="background:rgba(0,0,0,0.08)"></div>
+
+    <!-- avatar + logout -->
+    <button (click)="onLogout()"
+      class="flex flex-col items-center justify-center flex-1 h-[52px] rounded-[18px] border-none bg-transparent transition-all duration-200 active:scale-95"
+      style="color:rgba(60,60,67,0.5)">
+      <lucide-angular [img]="LogOut" [size]="20"/>
+      <span class="mt-0.5 text-[10px] font-semibold leading-none">Esci</span>
+    </button>
+
+  </nav>
+</div>

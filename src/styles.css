@@ -86,3 +86,12 @@ input, select, textarea { font-family: inherit; }
   .auth-grid { grid-template-columns: 1fr; }
   .auth-aside { display: none !important; }
 }
+
+@media (max-width: 600px) {
+  .btn {
+    width: 100%;
+    justify-content: center;
+    height: 46px;
+    font-size: 15px;
+  }
+}

@@ -20,6 +20,24 @@ export interface RecentTransaction {
   subCategory: { id: string; name: string } | null;
 }
 
+export interface PeriodComparison {
+  totalSpent: number;
+  totalIncome: number;
+  netBalance: number;
+  deltaSpent: number;
+  deltaIncome: number;
+  deltaSpentPct: number | null;
+  deltaIncomePct: number | null;
+  label: string;
+}
+
+export interface DashboardFilters {
+  month: string;
+  categoryId: string | null;
+  type: 'INCOME' | 'EXPENSE' | 'ALL';
+  compareWith: 'previous' | 'year' | null;
+}
+
 export interface DashboardMetrics {
   totalSpent: number;
   totalIncome: number;
@@ -32,4 +50,13 @@ export interface DashboardMetrics {
   dailyData: DailyPoint[];
   recentTransactions: RecentTransaction[];
   monthName: string;
+  comparison: PeriodComparison | null;
+  filters: DashboardFilters;
+}
+
+export interface DashboardQueryParams {
+  month?: string;
+  categoryId?: string;
+  type?: 'INCOME' | 'EXPENSE' | 'ALL';
+  compareWith?: 'previous' | 'year';
 }

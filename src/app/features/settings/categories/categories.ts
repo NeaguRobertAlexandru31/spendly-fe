@@ -8,7 +8,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Modal } from '@shared/components/modal/modal';
-import { CategoryService } from '@core/services/category';
+import { CategoryService } from '@core/services/category/category';
 import type {
   Category,
   SubCategory,

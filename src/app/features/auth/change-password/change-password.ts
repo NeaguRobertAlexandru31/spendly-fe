@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { AuthService } from '@core/services/auth';
+import { AuthService } from '@core/services/auth/auth';
 
 @Component({
   selector: 'app-change-password',

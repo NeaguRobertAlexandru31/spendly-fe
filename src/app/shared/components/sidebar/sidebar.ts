@@ -4,7 +4,7 @@ import { animate, style, transition, trigger } from '@angular/animations';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { LucideAngularModule } from 'lucide-angular';
 
-import { AuthService } from '@core/services/auth';
+import { AuthService } from '@core/services/auth/auth';
 import {
   ChevronLeft,
   ChevronRight,

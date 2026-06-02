@@ -1,5 +1,6 @@
 import {
   Component,
+  inject,
   input,
   output,
   effect,
@@ -7,6 +8,7 @@ import {
   OnDestroy,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ModalService } from '@core/services/modal/modal';
 
 @Component({
   selector: 'app-modal',
@@ -17,8 +19,10 @@ import { CommonModule } from '@angular/common';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Modal implements OnDestroy {
-  open = input<boolean>(false);
-  width = input<number>(520);
+  private readonly modalService = inject(ModalService);
+
+  open   = input<boolean>(false);
+  width  = input<number>(520);
   closed = output<void>();
 
   private escHandler = (e: KeyboardEvent) => {
@@ -30,9 +34,11 @@ export class Modal implements OnDestroy {
       if (this.open()) {
         document.body.style.overflow = 'hidden';
         document.addEventListener('keydown', this.escHandler);
+        this.modalService.open();
       } else {
         document.body.style.overflow = '';
         document.removeEventListener('keydown', this.escHandler);
+        this.modalService.close();
       }
     });
   }
@@ -40,6 +46,7 @@ export class Modal implements OnDestroy {
   ngOnDestroy() {
     document.body.style.overflow = '';
     document.removeEventListener('keydown', this.escHandler);
+    this.modalService.close();
   }
 
   onOverlayClick() {
